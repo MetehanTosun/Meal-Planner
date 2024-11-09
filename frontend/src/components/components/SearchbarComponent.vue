@@ -4,6 +4,7 @@
       type="text"
       placeholder="Suchen..."
       v-model="searchQuery"
+      @input="startSearch"
     />
     <button class="icon" @click="startSearch">
       <svg
@@ -37,8 +38,6 @@
 
 <script setup>
 import { ref } from 'vue';
-
-//imports the MockRecipes
 import { mockRecipes } from '../../classes/MockRecipe.js';
 
 
@@ -62,7 +61,7 @@ function startSearch(){
 </script>
 
 <style scoped>
-  /*searchbar*/
+  
   .search-bar {
       display: flex;
       align-items: center;
@@ -76,7 +75,6 @@ function startSearch(){
       position: relative;
   }
 
-  /* input-field */
   .search-bar input {
       border: none;
       outline: none;
@@ -86,7 +84,6 @@ function startSearch(){
       padding: 5px;
   }
 
-  /* icon for the magnifying glass */
   .search-bar .icon {
       position: absolute;
       right: 10px;
