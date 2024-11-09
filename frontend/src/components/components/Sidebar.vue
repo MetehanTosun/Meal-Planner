@@ -3,7 +3,8 @@
         <div class="sidebar-header">Rezepte</div>
         <SearchbarComponent @update:filtered-recipes="$emit('update:filtered-recipes', $event)" />
         <ul class="recipe-list">
-            <li v-for="(item, index) in filteredRecipes" :key="index">
+            <li v-for="(item, index) in filteredRecipes" :key="index" :draggable=true @dragstart="dragStart(item)"
+                @dragend="dragEnd()">
                 {{ item.name }}
             </li>
         </ul>
@@ -25,6 +26,22 @@ export default {
         },
     },
     emits: ['update:filtered-recipes'],
+    data() {
+        return {
+            draggedItem: null
+        };
+    },
+    methods: {
+        dragStart(item) {
+            if (this.draggedItem == null) {
+                this.draggedItem = item;
+                console.log("Currently Dragged Item:" + JSON.stringify(item, null, 2));
+            }
+        },
+        dragEnd() {
+            this.draggedItem = null;
+        }
+    }
 };
 </script>
 

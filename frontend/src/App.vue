@@ -14,18 +14,7 @@
       />
 
 
-      <div class="content">
-        <div class="menu-bar">
-
-          <div class="menu-item"></div>
-          <div class="menu-item"></div>
-          <div class="menu-item"></div>
-          <div class="menu-item"></div>
-          <div class="menu-item"></div>
-          <div class="menu-item"></div>
-          <div class="menu-item"></div>
-        </div>
-      </div>
+      <Workspace />
 
     </div>
   </div>
@@ -37,6 +26,7 @@ import { ref } from 'vue';
 import { mockRecipes } from './classes/MockRecipe';
 import SearchbarComponent from './components/components/SearchbarComponent.vue';
 import Sidebar from './components/components/Sidebar.vue';
+import Workspace from './components/components/Workspace.vue';
 
 
 const filteredRecipes = ref(mockRecipes);
