@@ -3,6 +3,7 @@ package de.team5.sopra.backend.models;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -28,7 +29,10 @@ public class Day {
     @JoinColumn(name = "week_id")
     private Week week;
 
-    @ManyToMany
+    /*
+     *  cascade is used to create the recipe in the db automatically when its pushed with a day
+     */
+    @ManyToMany(cascade = CascadeType.PERSIST)
     @JoinTable(
         name = "day_recipe",
         joinColumns = @JoinColumn(name = "day_id"),
