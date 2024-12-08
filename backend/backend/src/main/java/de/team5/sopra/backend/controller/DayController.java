@@ -1,9 +1,11 @@
 package de.team5.sopra.backend.controller;
 
-import java.lang.foreign.Linker.Option;
+//import java.lang.foreign.Linker.Option;
 import java.util.List;
 import java.util.Optional;
 
+import de.team5.sopra.backend.models.DayRequest;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,17 +15,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import de.team5.sopra.backend.dto.DayDto;
 import de.team5.sopra.backend.models.Day;
-import de.team5.sopra.backend.models.Day.Weekday;
-import de.team5.sopra.backend.repository.DayRepository;
 import de.team5.sopra.backend.service.DayService;
 import jakarta.validation.Valid;
-import jakarta.websocket.server.PathParam;
 
 @RestController
 @RequestMapping("/days")
@@ -42,13 +40,9 @@ public class DayController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Day> getDayById(@PathVariable("id") Long id){
-        Optional<Day> day = dayService.getDayById(id);
-        if(!day.isPresent()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                String.format("Day with ID %s not found!", id));
-        }
-        return ResponseEntity.ok(day.get());
+    public Day getDayById(@PathVariable("id") Long id){
+        Day day = dayService.getDayById(id);
+        return day;
     }
 
     @DeleteMapping("/{id}")
@@ -56,20 +50,32 @@ public class DayController {
         dayService.deleteDay(id);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/{dayId}/recipes/{recipeId}")
+    public ResponseEntity<String> removeRecipeFromDay(
+            @PathVariable Long dayId,
+            @PathVariable Long recipeId) {
+        try {
+            dayService.removeRecipeFromDay(dayId, recipeId);
+            return ResponseEntity.ok("Recipe successfully removed from the day.");
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred.");
+        }
+    }
     /*
      * String in the JSON send is okay, but the name has to be Uppercase because of ENUM in Day
      */
     @PostMapping
-    public ResponseEntity<Day> createDay(@Valid @RequestBody DayDto requestBody){
-        Weekday weekday;
+    public ResponseEntity<Day> createDay(@RequestBody DayRequest dayRequest) {
         try {
-            weekday = Weekday.valueOf(requestBody.getName().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid day name: " +requestBody.getName());
+            Day createdDay = dayService.createDay(dayRequest);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdDay);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
-        Day day = new Day(weekday, requestBody.getRecipes());
-        dayService.saveDay(day);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(day);
     }
 }

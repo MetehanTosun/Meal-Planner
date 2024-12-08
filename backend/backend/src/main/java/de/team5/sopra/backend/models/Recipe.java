@@ -3,70 +3,67 @@ package de.team5.sopra.backend.models;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Table(name = "recipes")
+@Getter
+@Setter
 public class Recipe {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
+    @NotBlank
     private String name;
 
-    @Enumerated(EnumType.STRING)
-    private Foodtype foodtype;
+    @Min(0)
+    private int time;
 
-    enum Foodtype{
+    @ElementCollection
+    @CollectionTable(
+            name = "recipe_ingredients",
+            joinColumns = @JoinColumn(name = "recipe_id") // Fremdschlüssel zu recipes.id
+    )
+    private List<String> ingredients = new ArrayList<>();
+
+    // Mapping für instructions
+    @ElementCollection
+    @CollectionTable(
+            name = "recipe_instructions",
+            joinColumns = @JoinColumn(name = "recipe_id") // Fremdschlüssel zu recipes.id
+    )
+    private List<String> instructions = new ArrayList<>();
+
+
+
+    @NotNull(message = "Food type cant be null")
+    @Enumerated(EnumType.STRING)
+    private Recipe.FoodType foodtype;
+
+
+    enum FoodType {
         VEGAN,
         VEGETARIAN,
         MEAT
     }
 
-    @ManyToMany(mappedBy = "dayRecipes")
+    @ManyToMany(mappedBy = "recipes")
     private List<Day> days = new ArrayList<>();
-
-    private String instructions;
 
     public Recipe(){}
 
-    public Recipe(String name, Foodtype foodtype, String instructions) {
+    public Recipe(String name, FoodType foodtype, List<String> ingredients, List<String> instructions, int time) {
         this.name = name;
         this.foodtype = foodtype;
+        this.ingredients = ingredients;
         this.instructions = instructions;
-    }
-    // Getters and setters
-    public long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Foodtype getFoodtype() {
-        return foodtype;
-    }
-
-    public void setFoodtype(Foodtype foodtype) {
-        this.foodtype = foodtype;
-    }
-
-    public String getInstructions() {
-        return instructions;
-    }
-
-    public void setInstructions(String instructions) {
-        this.instructions = instructions;
+        this.time = time;
     }
 }
