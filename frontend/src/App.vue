@@ -1,35 +1,11 @@
 <template>
   <div id="app">
-
-    <Topbar />
-
-    <div class="main-container">
-
-      <Sidebar :filtered-recipes="filteredRecipes" @update:filtered-recipes="updateFilteredRecipes" />
-
-
-      <Workspace />
-
-    </div>
+    <router-view />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
 
-import { mockRecipes } from './classes/MockRecipe';
-import SearchbarComponent from './components/components/SearchbarComponent.vue';
-import Sidebar from './components/components/Sidebar.vue';
-import Workspace from './components/components/Workspace.vue';
-import Topbar from './components/components/Topbar.vue';
-
-
-const filteredRecipes = ref(mockRecipes);
-
-function updateFilteredRecipes(newFilteredRecipes) {
-  console.log("Updating filtered recipes:", newFilteredRecipes);
-  filteredRecipes.value = newFilteredRecipes;
-}
 </script>
 
 <style>

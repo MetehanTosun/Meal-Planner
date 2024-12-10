@@ -1,0 +1,8 @@
+# Ignore application properties
+backend/backend/src/main/resources/application.properties
+
+# Ignore useless test.http
+backend/backend/src/test.http
+
+# Ignore IDE configuration files
+.idea/
