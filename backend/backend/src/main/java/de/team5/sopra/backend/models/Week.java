@@ -28,7 +28,6 @@ public class Week {
     @OneToMany(mappedBy = "week", cascade = CascadeType.PERSIST)
     private List<Day> days;
 
-
     public Week(){}
 
 }

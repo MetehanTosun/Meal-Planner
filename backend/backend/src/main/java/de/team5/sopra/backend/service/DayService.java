@@ -38,6 +38,7 @@ public class DayService {
         return dayRepository.findAll();
     }
 
+
     public Day getDayById(Long id){
         Optional<Day> searchedDay = dayRepository.findById(id);
         if(searchedDay.isEmpty()){

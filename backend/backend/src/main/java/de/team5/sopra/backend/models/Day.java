@@ -36,6 +36,7 @@ public class Day {
     private List<Recipe> recipes = new ArrayList<>();
 
     public Day() {
+
     }
 
 }

@@ -22,6 +22,7 @@ public class AuthController {
         this.userRepository = userRepository;
     }
 
+
     @GetMapping("/users")
     public List<User> getAllUsers() {
         return userRepository.findAll();

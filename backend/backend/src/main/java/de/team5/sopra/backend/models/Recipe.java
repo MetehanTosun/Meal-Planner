@@ -41,8 +41,6 @@ public class Recipe {
     )
     private List<String> instructions = new ArrayList<>();
 
-
-
     @NotNull(message = "Food type cant be null")
     @Enumerated(EnumType.STRING)
     private Recipe.FoodType foodtype;
