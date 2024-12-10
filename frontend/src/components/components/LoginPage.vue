@@ -5,6 +5,7 @@ api of vue 3 and axios.
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import { setUserId } from '@/storage/userStorage.js'
 
 const router = useRouter()
 const username = ref('')
@@ -61,6 +62,7 @@ const handleLogin = async () => {
     const response = await sendLogin()
     if (response.status === 200) {
       alert('Successfully logged in!')
+      setUserId(response.userId)
       console.log('Logging in with:', username.value, password.value)
       router.push('/')
     }
