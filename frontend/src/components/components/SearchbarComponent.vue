@@ -14,25 +14,47 @@
 <script setup>
 import { ref } from 'vue';
 import { mockRecipes } from '../../classes/MockRecipe.js';
-
+import { fetchRecipes } from '../../classes/ApiController.js';
 
 const searchQuery = ref('');
-const emit = defineEmits(['update:filteredRecipes']);
+const emit = defineEmits(['update:filtered-recipes']);
 
-function startSearch() {
+/*
+const props = defineProps({
+  dietFilter: {
+    type: String,
+    required: false,
+    default: null,
+  },
+});
+*/
+async function startSearch() {
   if (searchQuery.value.trim()) {
-    const filteredRecipes = mockRecipes
-      .filter(recipe => recipe.name.toLowerCase()
-        .includes(searchQuery.value.trim().toLowerCase()));
-    console.log(filteredRecipes);
+    try {
+      // API query for real recipes
+      const filteredRecipes = await fetchRecipes(searchQuery.value);
+      console.log("Rezepte von API:", filteredRecipes);
 
-    emit("update:filteredRecipes", filteredRecipes);
+      // Uses the Mockrecipes if the Api does not have a response
+      if (filteredRecipes.length === 0) {
+        console.warn("Keine API-Ergebnisse gefunden. Verwende Mockrezepte.");
+        emit("update:filteredRecipes", mockRecipes.filter(mockRecipeFilter));
+      } else {
+        emit("update:filteredRecipes", filteredRecipes);
+      }
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Rezepte. Verwende Mockrezepte:", error);
+      emit("update:filteredRecipes", mockRecipes.filter(mockRecipeFilter));
+    }
   } else {
+    console.log("Keine Suchanfrage. Zeige alle Mockrezepte.");
     emit("update:filteredRecipes", mockRecipes);
   }
-
 }
 
+function mockRecipeFilter(recipe) {
+  return recipe.name.toLowerCase().includes(searchQuery.value.trim().toLowerCase());
+}
 </script>
 
 <style scoped>
