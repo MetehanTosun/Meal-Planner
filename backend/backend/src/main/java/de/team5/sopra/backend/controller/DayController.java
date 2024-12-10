@@ -64,7 +64,6 @@ public class DayController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred.");
         }
     }
-
     /*
      * String in the JSON send is okay, but the name has to be Uppercase because of ENUM in Day
      */

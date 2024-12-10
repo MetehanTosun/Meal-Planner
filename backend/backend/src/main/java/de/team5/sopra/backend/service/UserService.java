@@ -16,6 +16,7 @@ public class UserService {
         this.passwordEncoder = new BCryptPasswordEncoder();
     }
 
+
     public User registerUser(String username, String password) {
         if (userRepository.findByUsername(username) != null) {
             throw new IllegalArgumentException("Benutzername bereits vergeben!");

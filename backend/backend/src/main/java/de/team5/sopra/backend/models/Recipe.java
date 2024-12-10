@@ -45,7 +45,6 @@ public class Recipe {
     @Enumerated(EnumType.STRING)
     private Recipe.FoodType foodtype;
 
-
     enum FoodType {
         VEGAN,
         VEGETARIAN,
