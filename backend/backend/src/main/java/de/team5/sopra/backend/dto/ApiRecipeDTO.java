@@ -10,6 +10,7 @@ import java.util.List;
 public class ApiRecipeDTO {
     private String name;
     private List<String> ingredients;
+    private List<Long> days;
     private double time;
     private String nutrition;
     private List<String> diet;

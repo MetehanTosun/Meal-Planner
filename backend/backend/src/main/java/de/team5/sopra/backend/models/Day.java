@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,6 +23,7 @@ public class Day {
 
     @ManyToOne
     @JoinColumn(name = "week_id")
+    @JsonBackReference
     private Week week;
 
     @DateTimeFormat(pattern = "dd.MM.yyyy")

@@ -40,9 +40,14 @@ public class RecipeService {
     @Transactional
     public Recipe createRecipe(Recipe recipe) {
         Recipe savedRecipe = recipeRepository.save(recipe);
+
         System.out.println("Recipe ID: " + savedRecipe.getId());
         savedRecipe.setIngredients(recipe.getIngredients());
+
+        System.out.println(savedRecipe.getIngredients());
+
         recipeRepository.save(savedRecipe);
+
         return savedRecipe;
     }
     public void deleteRecipeById(Long id) {
