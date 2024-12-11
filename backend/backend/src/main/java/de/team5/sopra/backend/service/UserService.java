@@ -1,7 +1,10 @@
 package de.team5.sopra.backend.service;
 
+import de.team5.sopra.backend.models.Day;
+import de.team5.sopra.backend.models.DayRequest;
 import de.team5.sopra.backend.models.User;
 import de.team5.sopra.backend.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -46,4 +49,5 @@ public class UserService {
         }
         return null;
     }
+
 }

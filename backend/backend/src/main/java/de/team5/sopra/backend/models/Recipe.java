@@ -3,6 +3,7 @@ package de.team5.sopra.backend.models;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -29,7 +30,7 @@ public class Recipe {
     @ElementCollection
     @CollectionTable(
             name = "recipe_ingredients",
-            joinColumns = @JoinColumn(name = "recipe_id") // Fremdschlüssel zu recipes.id
+            joinColumns = @JoinColumn(name = "recipe_id")
     )
     private List<String> ingredients = new ArrayList<>();
 
@@ -37,7 +38,7 @@ public class Recipe {
     @ElementCollection
     @CollectionTable(
             name = "recipe_instructions",
-            joinColumns = @JoinColumn(name = "recipe_id") // Fremdschlüssel zu recipes.id
+            joinColumns = @JoinColumn(name = "recipe_id")
     )
     private List<String> instructions = new ArrayList<>();
 
@@ -51,6 +52,7 @@ public class Recipe {
         MEAT
     }
 
+    @JsonIgnore
     @ManyToMany(mappedBy = "recipes")
     private List<Day> days = new ArrayList<>();
 

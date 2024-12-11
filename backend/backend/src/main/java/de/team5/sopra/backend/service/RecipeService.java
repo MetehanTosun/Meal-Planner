@@ -39,9 +39,10 @@ public class RecipeService {
 
     @Transactional
     public Recipe createRecipe(Recipe recipe) {
-        // Speichern des Rezepts in der Datenbank
         Recipe savedRecipe = recipeRepository.save(recipe);
-
+        System.out.println("Recipe ID: " + savedRecipe.getId());
+        savedRecipe.setIngredients(recipe.getIngredients());
+        recipeRepository.save(savedRecipe);
         return savedRecipe;
     }
     public void deleteRecipeById(Long id) {
@@ -52,7 +53,6 @@ public class RecipeService {
         Recipe recipe = new Recipe();
         if (ingredient != null) {
             List<String> ingredients = recipe.getIngredients();
-            // Entferne das Ingredient, falls es existiert
             if (ingredients.contains(ingredient)) {
                 ingredients.remove(ingredient);
             }

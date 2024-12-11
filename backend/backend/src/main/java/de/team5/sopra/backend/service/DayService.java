@@ -97,7 +97,27 @@ public class DayService {
             day.setRecipes(recipes);
         }
 
-        // Speichere den neuen Tag
+
+        return dayRepository.save(day);
+    }
+    public Day updateDay(Long id, DayRequest dayRequest) {
+        Optional<Day> dayOptional = dayRepository.findById(id);
+        if (dayOptional.isEmpty()) {
+            throw new EntityNotFoundException("Day not found with id: " + id);
+        }
+        Day day = dayOptional.get();
+        if (dayRequest.getDate() != null) {
+            day.setDate(dayRequest.getDate());
+        }
+        if (dayRequest.getWeekId() != null) {
+            Week week = weekRepository.findById(dayRequest.getWeekId())
+                    .orElseThrow(() -> new EntityNotFoundException("Week not found with id: " + dayRequest.getWeekId()));
+            day.setWeek(week);
+        }
+        if (dayRequest.getRecipeIds() != null && !dayRequest.getRecipeIds().isEmpty()) {
+            List<Recipe> recipes = recipeRepository.findAllById(dayRequest.getRecipeIds());
+            day.setRecipes(recipes);
+        }
         return dayRepository.save(day);
     }
 }
