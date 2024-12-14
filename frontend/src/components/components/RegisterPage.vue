@@ -25,7 +25,7 @@ const sendNewUser = async () => {
   return await axios.post('http://localhost:8080/auth/register', {
     username: username.value,
     password: password.value,
-  })
+  }, )
 }
 
 /**

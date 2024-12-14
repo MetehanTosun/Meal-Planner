@@ -28,6 +28,10 @@ const props = defineProps({
   },
 });
 */
+
+// Commented out the startSearch function because the extern api will eventually not be used in the final web app
+
+/*
 async function startSearch() {
   if (searchQuery.value.trim()) {
     try {
@@ -46,6 +50,17 @@ async function startSearch() {
       console.error("Fehler beim Abrufen der Rezepte. Verwende Mockrezepte:", error);
       emit("update:filteredRecipes", mockRecipes.filter(mockRecipeFilter));
     }
+  } else {
+    console.log("Keine Suchanfrage. Zeige alle Mockrezepte.");
+    emit("update:filteredRecipes", mockRecipes);
+  }
+}
+*/
+
+async function startSearch() {
+  if (searchQuery.value.trim()) {
+    const filteredRecipes = mockRecipes.filter(mockRecipeFilter);
+    emit("update:filteredRecipes", filteredRecipes);
   } else {
     console.log("Keine Suchanfrage. Zeige alle Mockrezepte.");
     emit("update:filteredRecipes", mockRecipes);
