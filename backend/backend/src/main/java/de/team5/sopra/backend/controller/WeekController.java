@@ -1,11 +1,11 @@
 package de.team5.sopra.backend.controller;
 
 import de.team5.sopra.backend.dto.WeekRequest;
+import de.team5.sopra.backend.dto.WeeklyCreationDTO;
 import de.team5.sopra.backend.models.Week;
 import de.team5.sopra.backend.service.WeekService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,20 +19,53 @@ public class WeekController {
 
 	@GetMapping
 	public ResponseEntity<List<Week>> getAllWeeks() {
-		return ResponseEntity.ok().body(weekService.getAllWeeks());
+		List<Week> weeks = weekService.getAllWeeks();
+		return ResponseEntity.ok(weeks);
 	}
 
+	@GetMapping("/{id}")
+	public ResponseEntity<Week> getWeek(@PathVariable Long id) {
+		return weekService.getWeekById(id)
+				.map(ResponseEntity::ok)
+				.orElse(ResponseEntity.notFound().build());
+	}
+
+	/**
+	 * Create a new Week. User ID is mandatory, or it throws an exception.
+	 */
 	@PostMapping
-	public ResponseEntity<Week> createWeek(@RequestBody WeekRequest week) {
-		try{
-			Week createdWeek = weekService.createWeek(week);
-			return ResponseEntity.ok().body(createdWeek);
-		}catch(IllegalArgumentException e){
-			return ResponseEntity.badRequest().body(null);
-		}catch(Exception e){
-			System.out.println(e);
-			return ResponseEntity.internalServerError().body(null);
+	public ResponseEntity<Week> createWeek(@RequestBody WeekRequest weekRequest) {
+		try {
+			Week created = weekService.createWeek(weekRequest);
+			return ResponseEntity.ok(created);
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.badRequest().build();
 		}
 	}
 
+	@DeleteMapping("/{id}")
+	public ResponseEntity<Void> deleteWeek(@PathVariable Long id) {
+		try {
+			weekService.deleteWeek(id);
+			return ResponseEntity.noContent().build();
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.notFound().build();
+		}
+	}
+
+	@PostMapping("/create/user/{id}")
+	public ResponseEntity<?> createDefaultNewWeek(@PathVariable Long id, @RequestBody WeeklyCreationDTO weeklyCreationDTO) {
+		System.out.println("Entry Data createDefaultNewWeek: " + id + " and startDate: " + weeklyCreationDTO.getStartDate());
+
+		try{
+			Week createdWeek = weekService.createNewWeekForUser(id, weeklyCreationDTO.getStartDate());
+			System.out.println("Created Week: " + createdWeek);
+			return ResponseEntity.ok(createdWeek);
+		}catch (IllegalArgumentException e) {
+			return ResponseEntity.badRequest().body(e.getMessage());
+		}catch (Exception e) {
+			return ResponseEntity.internalServerError().build();
+		}
+
+	}
 }

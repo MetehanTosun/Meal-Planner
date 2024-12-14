@@ -6,8 +6,6 @@ import de.team5.sopra.backend.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.View;
 
 import java.util.HashMap;
@@ -46,6 +44,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody User user) {
         try {
+            System.out.println(user.getPassword());
             userService.registerUser(user.getUsername(), user.getPassword());
             return ResponseEntity.ok("Benutzer erfolgreich registriert!");
         } catch (IllegalArgumentException e) {
@@ -67,5 +66,6 @@ public class AuthController {
             return ResponseEntity.status(401).body(errorResponse);
         }
     }
+
 }
 

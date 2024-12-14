@@ -10,7 +10,7 @@ import java.util.List;
 @Getter
 @Setter
 public class WeekRequest {
-
+	private Long userId;
 	private List<Long> days;
 	private Date startDate;
 	private Date endDate;

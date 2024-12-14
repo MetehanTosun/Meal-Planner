@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import de.team5.sopra.backend.models.enums.FoodType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -27,14 +29,19 @@ public class Recipe {
     @Min(0)
     private int time;
 
-    @ElementCollection
-    @CollectionTable(
-            name = "recipe_ingredients",
-            joinColumns = @JoinColumn(name = "recipe_id")
-    )
-    private List<String> ingredients = new ArrayList<>();
+    /**
+     * Anstelle der ElementCollection-Liste von Strings jetzt eine
+     * One-to-Many-Beziehung zur Ingredient-Entity.
+     * CascadeType.ALL erlaubt es z. B. neue Zutaten gleich
+     * mit dem Rezept zu persistieren bzw. beim Löschen auch
+     * die zugehörigen Zutaten zu löschen (orphanRemoval = true).
+     */
+    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
+    //CRITICAL
+    @JsonManagedReference
+    private List<Ingredient> ingredients = new ArrayList<>();
 
-    // Mapping für instructions
+
     @ElementCollection
     @CollectionTable(
             name = "recipe_instructions",
@@ -44,13 +51,9 @@ public class Recipe {
 
     @NotNull(message = "Food type cant be null")
     @Enumerated(EnumType.STRING)
-    private Recipe.FoodType foodtype;
+    private FoodType foodtype;
 
-    enum FoodType {
-        VEGAN,
-        VEGETARIAN,
-        MEAT
-    }
+
 
     @JsonIgnore
     @ManyToMany(mappedBy = "recipes")
@@ -58,11 +61,21 @@ public class Recipe {
 
     public Recipe(){}
 
-    public Recipe(String name, FoodType foodtype, List<String> ingredients, List<String> instructions, int time) {
+    public Recipe(String name, FoodType foodtype, List<Ingredient> ingredients, List<String> instructions, int time) {
         this.name = name;
         this.foodtype = foodtype;
         this.ingredients = ingredients;
         this.instructions = instructions;
         this.time = time;
+    }
+
+    public void addIngredient(Ingredient ingredient) {
+        this.ingredients.add(ingredient);
+        ingredient.setRecipe(this);
+    }
+
+    public void removeIngredient(Ingredient ingredient) {
+        this.ingredients.remove(ingredient);
+        ingredient.setRecipe(null);
     }
 }

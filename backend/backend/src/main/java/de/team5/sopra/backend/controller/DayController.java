@@ -2,20 +2,19 @@ package de.team5.sopra.backend.controller;
 
 //import java.lang.foreign.Linker.Option;
 import java.util.List;
-import java.util.Optional;
 
-import de.team5.sopra.backend.models.DayRequest;
+import de.team5.sopra.backend.dto.AddRecipeToDayRequest;
+import de.team5.sopra.backend.dto.DayRequest;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
-import de.team5.sopra.backend.dto.DayDto;
 import de.team5.sopra.backend.models.Day;
 import de.team5.sopra.backend.service.DayService;
-import jakarta.validation.Valid;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/days")
@@ -41,8 +40,13 @@ public class DayController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delteDay(@PathVariable("id") Long id){
-        dayService.deleteDay(id);
-        return ResponseEntity.noContent().build();
+        try{
+            dayService.deleteDay(id);
+            return ResponseEntity.noContent().build();
+        }catch (EntityNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+
     }
 
     @DeleteMapping("/{dayId}/recipes/{recipeId}")
@@ -83,5 +87,17 @@ public class DayController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
+
+    // TODO: ADD THIS POST-Mapping
+//    @PostMapping("/days/add-recipe")
+//    public ResponseEntity<Day> addRecipeToDayWithIdAndPortion(@RequestBody @Valid AddRecipeToDayRequest request) {
+//        try {
+//            Day updatedDay = dayService.addRecipeToDayWithIdAndPortion(request);
+//            return ResponseEntity.ok(updatedDay);
+//        } catch (IllegalArgumentException e) {
+//            return ResponseEntity.badRequest().body(null);
+//        }
+//    }
+
 
 }

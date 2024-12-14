@@ -1,11 +1,7 @@
 package de.team5.sopra.backend.service;
 
-import de.team5.sopra.backend.models.Day;
-import de.team5.sopra.backend.models.DayRequest;
 import de.team5.sopra.backend.models.User;
 import de.team5.sopra.backend.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +29,7 @@ public class UserService {
 
 
     public User registerUser(String username, String password) {
+        System.out.println(username+" "+ password);
         if (userRepository.findByUsername(username) != null) {
             throw new IllegalArgumentException("Benutzername bereits vergeben!");
         }
@@ -48,6 +45,10 @@ public class UserService {
             return user;
         }
         return null;
+    }
+
+    public Optional<User> findById(Long userId) {
+        return userRepository.findById(userId);
     }
 
 }

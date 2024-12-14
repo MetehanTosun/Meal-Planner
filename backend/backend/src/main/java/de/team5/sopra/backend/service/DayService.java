@@ -3,10 +3,13 @@ package de.team5.sopra.backend.service;
 import java.util.List;
 import java.util.Optional;
 
-import de.team5.sopra.backend.models.DayRequest;
+import de.team5.sopra.backend.dto.AddRecipeToDayRequest;
+import de.team5.sopra.backend.dto.DayRequest;
+import de.team5.sopra.backend.models.UserSpecificRecipe;
 import de.team5.sopra.backend.models.Week;
 import de.team5.sopra.backend.repository.RecipeRepository;
 import de.team5.sopra.backend.repository.WeekRepository;
+import de.team5.sopra.backend.repository.general.UserSpecificRecipeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -31,6 +34,8 @@ public class DayService {
     @Autowired
     private WeekRepository weekRepository;
 
+    private UserSpecificRecipeRepository userSpecificRecipeRepository;
+
     /*
      * This Operation retrieves every single day from the table.
      */
@@ -51,7 +56,11 @@ public class DayService {
     }
 
     public void deleteDay(Long id){
-        dayRepository.deleteById(id);
+        if(recipeRepository.existsById(id)){
+            dayRepository.deleteById(id);
+        }else{
+            throw new EntityNotFoundException("Day not found with id: "+id);
+        }
     }
 
     public Day addRecipeToDay(Long id, Recipe recipe){
@@ -74,8 +83,8 @@ public class DayService {
                 .orElseThrow(() -> new EntityNotFoundException("Recipe not found with id: " + recipeId));
 
         if (day.getRecipes().contains(recipe)) {
-            day.getRecipes().remove(recipe); // Rezept aus der Liste entfernen
-            dayRepository.save(day);        // Änderungen speichern
+            day.getRecipes().remove(recipe);
+            dayRepository.save(day);
         } else {
             throw new IllegalArgumentException("Recipe is not assigned to the specified day.");
         }
@@ -120,4 +129,29 @@ public class DayService {
         }
         return dayRepository.save(day);
     }
+    //TODO: ADD THIS FUNCTION
+//    public Day addRecipeToDayWithIdAndPortion(AddRecipeToDayRequest request) {
+//        // Retrieve the Day
+//        Day day = dayRepository.findById(request.getDayId())
+//                .orElseThrow(() -> new IllegalArgumentException("Day not found with ID: " + request.getDayId()));
+//
+//        // Retrieve the Recipe
+//        Recipe recipe = recipeRepository.findById(request.getRecipeId())
+//                .orElseThrow(() -> new IllegalArgumentException("Recipe not found with ID: " + request.getRecipeId()));
+//
+//        // Create a UserSpecificRecipe
+//        UserSpecificRecipe userSpecificRecipe = new UserSpecificRecipe();
+//        userSpecificRecipe.setRecipe(recipe);
+//        userSpecificRecipe.setDay(day);
+//        if (request.getPortions() != null) {
+//            userSpecificRecipe.setPortions(request.getPortions());
+//        }
+//
+//        // Save the UserSpecificRecipe
+//        userSpecificRecipeRepository.save(userSpecificRecipe);
+//
+//        // Add the recipe to the Day
+//        day.getRecipes().add(userSpecificRecipe);
+//        return dayRepository.save(day);
+//    }
 }

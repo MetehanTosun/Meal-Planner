@@ -1,41 +1,52 @@
 <template>
   <div class="sidebar">
-      <div class="sidebar-header"><p>Recipes</p></div>
+    <div class="sidebar-header"><p>Recipes</p></div>
 
-      <!-- Searchbar -->
-      <SearchbarComponent @update:filtered-recipes="applyDietFilter" />
+    <!-- Searchbar -->
+    <SearchbarComponent @update:filtered-recipes="applyDietFilter" />
 
-      <!-- Diet Filter Section -->
-      <div class="diet-filter">
-          <p>Filter:</p>
-          <label>
-              <input type="checkbox" value="vegetarian" v-model="dietFilter" @change="handleDietChange" />
-              Vegetarisch
-          </label>
-          <label>
-              <input type="checkbox" value="vegan" v-model="dietFilter" @change="handleDietChange" />
-              Vegan
-          </label>
-      </div>
+    <!-- Diet Filter Section -->
+    <div class="diet-filter">
+      <p>Filter:</p>
+      <label>
+        <input type="checkbox" value="vegetarian" v-model="dietFilter" @change="handleDietChange" />
+        Vegetarisch
+      </label>
+      <label>
+        <input type="checkbox" value="vegan" v-model="dietFilter" @change="handleDietChange" />
+        Vegan
+      </label>
+    </div>
 
-      <!-- Recipe List -->
-      <ul class="recipe-list">
-          <li v-for="(item, index) in filteredRecipes" :key="index" :draggable="true" @dragstart="dragStart($event, item)" @dragend="dragEnd()">
-              <p>{{ item.name }}</p>
-          </li>
-      </ul>
+    <div class="create-recipe">
+      <button class="create-recipe-button" @click="openCreateRecipe">
+        + Neues Rezept
+      </button>
+    </div>
+
+    <!-- Recipe List -->
+    <ul class="recipe-list">
+      <li v-for="(item, index) in filteredRecipes" :key="index" :draggable="true" @dragstart="dragStart($event, item)" @dragend="dragEnd()">
+        <p>{{ item.name }}</p>
+      </li>
+    </ul>
+
+    <!-- Add CreateRecipeView component here -->
+    <CreateRecipeView ref="createRecipeModal" />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue';
 import SearchbarComponent from './SearchbarComponent.vue';
+import { mockRecipes } from '@/classes/MockRecipe.js';
+import CreateRecipeView from './CreateRecipeView.vue';
 
 // Props
 defineProps({
   filteredRecipes: {
-      type: Array,
-      required: true
+    type: Array,
+    required: true
   }
 });
 
@@ -45,13 +56,14 @@ const emit = defineEmits(['update:filtered-recipes']);
 // Reactive variables
 const draggedItem = ref(null);
 const dietFilter = ref([]);
+const createRecipeModal = ref(null);
 
 // Methods
 const dragStart = (event, item) => {
   if (draggedItem.value === null) {
-      draggedItem.value = item;
-      event.dataTransfer.setData("application/json", JSON.stringify(item));
-      console.log("Currently Dragged Item:", JSON.stringify(item, null, 2));
+    draggedItem.value = item;
+    event.dataTransfer.setData("application/json", JSON.stringify(item));
+    console.log("Currently Dragged Item:", JSON.stringify(item, null, 2));
   }
 };
 
@@ -63,7 +75,7 @@ const dragEnd = () => {
 const handleDietChange = () => {
   // Only one checkbox can be selected at a time
   if (dietFilter.value.length > 1) {
-      dietFilter.value = [dietFilter.value[dietFilter.value.length - 1]];
+    dietFilter.value = [dietFilter.value[dietFilter.value.length - 1]];
   }
 
   // Trigger filtering based on diet
@@ -71,14 +83,21 @@ const handleDietChange = () => {
 };
 
 const applyDietFilter = (recipes = []) => {
+  const sourceRecipes = recipes.length > 0 ? recipes : mockRecipes;
   const currentFilter = dietFilter.value[0];
-  const filtered = recipes.filter(recipe => {
-      if (!currentFilter) return true;
-      return recipe.diet.includes(currentFilter);
-  });
+  const filtered = !currentFilter
+    ? sourceRecipes
+    : sourceRecipes.filter(recipe => recipe.diet.includes(currentFilter));
 
-  // Emit the filtered recipes back to the parent
   emit('update:filtered-recipes', filtered);
+};
+
+// For CreateRecipeView
+const openCreateRecipe = () => {
+  // Check if modal exists before trying to access it
+  if (createRecipeModal.value) {
+    createRecipeModal.value.showModal = true;
+  }
 };
 </script>
 
@@ -144,5 +163,21 @@ const applyDietFilter = (recipes = []) => {
 
 .diet-filter input[type="checkbox"] {
   margin-right: 8px;
+}
+
+.create-recipe-button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 1rem 0;
+  font-size: 1rem;
+}
+
+.create-recipe-button:hover {
+  background-color: #45a049;
 }
 </style>

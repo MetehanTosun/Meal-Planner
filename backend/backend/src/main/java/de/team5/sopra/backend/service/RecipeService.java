@@ -1,6 +1,8 @@
 package de.team5.sopra.backend.service;
 
+import de.team5.sopra.backend.models.Ingredient;
 import de.team5.sopra.backend.models.Recipe;
+
 import de.team5.sopra.backend.repository.RecipeRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,66 +10,116 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+
 
 @Service
+@Transactional
 public class RecipeService {
 
     @Autowired
     private RecipeRepository recipeRepository;
 
+    /**
+     * Alle Recipes aus der DB holen
+     */
     public List<Recipe> getAllRecipes() {
         return recipeRepository.findAll();
     }
 
+    /**
+     * Einzelnes Recipe per ID
+     */
     public Recipe getRecipeById(Long id) {
-        Optional<Recipe> searchedRecipe = recipeRepository.findById(id);
-        if (searchedRecipe.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The day with the ID: " + id + " wasn't found.");
-        }
-        return searchedRecipe.get();
+        return recipeRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Recipe with the ID: " + id + " wasn't found."
+                ));
     }
 
-    public List<String> getAllIngredients(Recipe recipe) {
-        if (recipe.getIngredients().isEmpty()) {
-            return new ArrayList<>();
-        }
+    /**
+     * Gibt die Ingredients eines Rezepts zurück.
+     */
+    public List<Ingredient> getAllIngredientsForRecipe(Long recipeId) {
+        Recipe recipe = getRecipeById(recipeId);
         return recipe.getIngredients();
     }
 
-    @Transactional
+    /**
+     * Rezept inklusive Zutaten erstellen.
+     * 'cascade = ALL' im Recipe-Entity sorgt dafür, dass die Ingredients automatisch gespeichert werden.
+     */
     public Recipe createRecipe(Recipe recipe) {
+
+        if (recipe.getIngredients() != null) {
+            for (Ingredient ing : recipe.getIngredients()) {
+                ing.setRecipe(recipe);
+            }
+        }
+
         Recipe savedRecipe = recipeRepository.save(recipe);
-
-        System.out.println("Recipe ID: " + savedRecipe.getId());
-        savedRecipe.setIngredients(recipe.getIngredients());
-
-        System.out.println(savedRecipe.getIngredients());
-
-        recipeRepository.save(savedRecipe);
-
         return savedRecipe;
     }
+
+    /**
+     * Aktualisiert ein existierendes Recipe.
+     * Falls es das Rezept nicht gibt, fliegt 404 NOT_FOUND (ResponseStatusException).
+     */
+    public Recipe updateRecipe(Long id, Recipe requestBody) {
+        Recipe existing = getRecipeById(id);
+
+        existing.setName(requestBody.getName());
+        existing.setFoodtype(requestBody.getFoodtype());
+        existing.setTime(requestBody.getTime());
+        existing.setInstructions(requestBody.getInstructions());
+
+
+        existing.getIngredients().clear();
+
+        if (requestBody.getIngredients() != null) {
+            for (Ingredient ing : requestBody.getIngredients()) {
+                existing.addIngredient(ing);
+            }
+        }
+
+        return recipeRepository.save(existing);
+    }
+
+    /**
+     * Löscht ein Recipe samt Ingredients (wegen orphanRemoval=true)
+     */
     public void deleteRecipeById(Long id) {
+        // Check, ob existiert
+        getRecipeById(id);
         recipeRepository.deleteById(id);
     }
 
-    public void deleteIngredient(String ingredient) {
-        Recipe recipe = new Recipe();
-        if (ingredient != null) {
-            List<String> ingredients = recipe.getIngredients();
-            if (ingredients.contains(ingredient)) {
-                ingredients.remove(ingredient);
+    /**
+     * Löscht eine einzelne Ingredient aus einem Recipe anhand des Ingredient-Namens.
+     * (Oder man macht es ID-basiert, was meist besser ist.)
+     */
+    public void deleteIngredient(Long recipeId, String ingredientName) {
+        Recipe recipe = getRecipeById(recipeId);
+
+        Ingredient found = null;
+        for (Ingredient ingr : recipe.getIngredients()) {
+            if (ingr.getName().equalsIgnoreCase(ingredientName)) {
+                found = ingr;
+                break;
             }
-        else throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The ingredient " + ingredient + " was not found.");
         }
+
+        if (found == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Ingredient '" + ingredientName + "' not found in recipe " + recipeId);
+        }
+
+        recipe.removeIngredient(found);
     }
 
-    public List<String> getInstructions() {
-        Recipe recipe = new Recipe();
-        List<String> instructions = recipe.getInstructions();
-        return instructions;
+    public List<String> getInstructions(Long recipeId) {
+        Recipe recipe = getRecipeById(recipeId);
+        return recipe.getInstructions();
     }
+
 }
