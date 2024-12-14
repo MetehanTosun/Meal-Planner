@@ -25,7 +25,7 @@ public class User {
 
     /*
     @OneToMany(mappedBy = "user")  // 'user' ist der Name des Feldes in der Week-Klasse, das die Beziehung speichert
-    private List<Week> weeks; // Hier wird eine Liste von Week-Objekten verwendet, um die Wochen zu speichern.
+    private List<Week> weeks; // Hier wird eine Liste von Week-Objekten verwendet, um die Wochen zu speichern
 
      */
 
