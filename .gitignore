@@ -6,3 +6,5 @@ backend/backend/src/test.http
 
 # Ignore IDE configuration files
 .idea/
+/tests/node_modules/
+/node_modules/
