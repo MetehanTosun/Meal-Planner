@@ -21,8 +21,6 @@ const password = ref('')
  */
 const sendNewUser = async () => {
   console.log('Attempt Registration: ')
-  console.log('Username:', username.value)
-  console.log('Password:', password.value)
 
   return await axios.post('http://localhost:8080/auth/register', {
     username: username.value,

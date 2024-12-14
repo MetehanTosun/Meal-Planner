@@ -63,7 +63,7 @@ const handleLogin = async () => {
     if (response.status === 200) {
       alert('Successfully logged in!')
       setUserId(response.userId)
-      console.log('Logging in with:', username.value, password.value)
+      //console.log('Logging in with:', username.value, password.value)
       router.push('/')
     }
   } catch (error) {
