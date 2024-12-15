@@ -94,7 +94,6 @@ const applyDietFilter = (recipes = []) => {
 
 // For CreateRecipeView
 const openCreateRecipe = () => {
-  // Check if modal exists before trying to access it
   if (createRecipeModal.value) {
     createRecipeModal.value.showModal = true;
   }

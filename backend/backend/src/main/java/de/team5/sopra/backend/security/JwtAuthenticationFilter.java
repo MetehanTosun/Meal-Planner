@@ -30,26 +30,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String username;
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-
-            if (request.getRequestURI().contains("/auth/login") ||
-                    request.getRequestURI().contains("/auth/register")) {
-                filterChain.doFilter(request, response);
-                return;
-            }
-
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "No valid authentication token found");
+        // Check if request path is for public endpoints
+        String requestPath = request.getRequestURI();
+        if (isPublicPath(requestPath)) {
+            filterChain.doFilter(request, response);
             return;
         }
 
+        final String authHeader = request.getHeader("Authorization");
 
-        jwt = authHeader.substring(7);
+        // If no auth header is present for protected endpoint
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
         try {
-            username = jwtService.extractUsername(jwt);
+            final String jwt = authHeader.substring(7);
+            final String username = jwtService.extractUsername(jwt);
+
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 User user = userService.getUserByUsername(username);
                 if (jwtService.isTokenValid(jwt, user)) {
@@ -59,13 +58,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             List.of(new SimpleGrantedAuthority("ROLE_USER"))
                     );
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                    filterChain.doFilter(request, response);
+                    return;
                 }
             }
-        } catch (Exception e) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid authentication token");
-            return;
-        }
 
-        filterChain.doFilter(request, response);
+            // If we get here, token was invalid
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+        } catch (Exception e) {
+            System.err.println("JWT Authentication error: " + e.getMessage());
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        }
+    }
+
+    private boolean isPublicPath(String path) {
+        return path.contains("/auth/login") ||
+                path.contains("/auth/register");
     }
 }

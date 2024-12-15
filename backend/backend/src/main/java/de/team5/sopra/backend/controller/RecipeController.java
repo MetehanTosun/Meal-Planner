@@ -1,12 +1,15 @@
 package de.team5.sopra.backend.controller;
 
 
+import de.team5.sopra.backend.dto.RecipeDTO;
 import de.team5.sopra.backend.exception.ForbiddenException;
 import de.team5.sopra.backend.models.Recipe;
 import de.team5.sopra.backend.models.User;
 import de.team5.sopra.backend.service.RecipeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +26,8 @@ import java.util.List;
 public class RecipeController {
 
     private final RecipeService recipeService;
+
+    private static final Logger log = LoggerFactory.getLogger(RecipeController.class);
 
     /**
      * GET /recipes : Liste aller Rezepte
@@ -46,11 +51,17 @@ public class RecipeController {
      * Erwartet im RequestBody ein JSON, das auch "ingredients" als Array von Ingredient-Objekten enthält.
      */
     @PostMapping
-    public ResponseEntity<Recipe> createRecipe(@Valid @RequestBody Recipe recipeRequest) {
-        User currentUser = getCurrentUser();
-        recipeRequest.setCreator(currentUser);
-        Recipe createdRecipe = recipeService.createRecipe(recipeRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdRecipe);
+    public ResponseEntity<RecipeDTO> createRecipe(@Valid @RequestBody Recipe recipeRequest) {
+        try {
+            User currentUser = getCurrentUser();
+            recipeRequest.setCreator(currentUser);
+            Recipe createdRecipe = recipeService.createRecipe(recipeRequest);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(RecipeDTO.fromRecipe(createdRecipe));
+        } catch (Exception e) {
+            log.error("Error creating recipe", e);
+            throw e;
+        }
     }
 
     /**

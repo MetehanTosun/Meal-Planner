@@ -30,6 +30,20 @@ public class WeekController {
 				.orElse(ResponseEntity.notFound().build());
 	}
 
+	@GetMapping("/current/{userId}")
+	public ResponseEntity<?> getCurrentWeek(@PathVariable Long userId) {
+		try {
+			System.out.println("Fetching current week for user: " + userId);
+			Week currentWeek = weekService.getOrCreateCurrentWeek(userId);
+			return ResponseEntity.ok(currentWeek);
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.badRequest().body(e.getMessage());
+		} catch (Exception e) {
+			System.err.println("Error getting current week: " + e.getMessage());
+			return ResponseEntity.internalServerError().body("Error fetching current week");
+		}
+	}
+
 	/**
 	 * Create a new Week. User ID is mandatory, or it throws an exception.
 	 */

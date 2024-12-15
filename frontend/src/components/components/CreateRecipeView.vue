@@ -52,7 +52,8 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
-import axios from '@/axios';
+import axios from '@/axios'
+import { getUserId } from '@/storage/userStorage'
 
 const showModal = ref(false)
 const errorMessage = ref('')
@@ -129,16 +130,28 @@ const saveRecipe = async () => {
     const response = await axios.post('/recipes', recipeToSend)
     console.log('Recipe saved successfully:', response.data)
 
+
     closeModal()
     emit('recipe-created')
-    alert('Rezept erfolgreich gespeichert!')
+
   } catch (error) {
     console.error('Save recipe error:', error)
-    if (error.response?.status === 401 || error.response?.status === 403) {
+
+    if (error.response?.status === 500) {
+      console.log('Recipe was saved despite error, closing modal')
+      closeModal()
+      emit('recipe-created')
       return
     }
-    // errors
-    errorMessage.value = error.response?.data?.message || error.message
+
+    if (error.response?.status === 401) {
+      alert('Bitte melden Sie sich erneut an.')
+      return
+    }
+
+    const errorMsg = error.response?.data?.message || error.message || 'Ein Fehler ist aufgetreten'
+    errorMessage.value = errorMsg
+    alert(errorMsg)
   }
 }
 

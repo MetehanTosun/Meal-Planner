@@ -14,7 +14,7 @@
           <ul class="recipe-day-list">
             <li v-for="(recipe, index) in weeklyList[day]" :key="index">
               <p>{{ recipe.name }}</p>
-              <button @click="deleteRecipe(day, recipeIndex)" class="delete-recipe-button">
+              <button @click="deleteRecipe(day, index)" class="delete-recipe-button">
                 x
               </button>
             </li>
@@ -25,78 +25,80 @@
   </div>
 </template>
 
-<script>
-import axios from 'axios'
+<script setup>
+import { ref, onMounted } from 'vue'
+import axios from '@/axios'
+import { getUserId } from '@/storage/userStorage'
+import router from 'express/lib/router';
 
-export default {
-  data() {
-    return {
-      days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-      weeklyList: {
-        Monday: [],
-        Tuesday: [],
-        Wednesday: [],
-        Thursday: [],
-        Friday: [],
-        Saturday: [],
-        Sunday: [],
-      },
-    }
-  },
-  methods: {
-    // 11 Dec
-    async fetchOrCreateWeek() {
-      try {
-        const userId = localStorage.getItem('userId')
-        if (!userId) {
-          console.error('User ID is not found in local storage')
-          return
-        }
+const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+const weeklyList = ref({
+  Monday: [],
+  Tuesday: [],
+  Wednesday: [],
+  Thursday: [],
+  Friday: [],
+  Saturday: [],
+  Sunday: [],
+})
 
-        // Fetch the current week or create a new one
-        const response = await axios.get(`http://localhost:8080/weeks/current/${userId}`)
-        const weekData = response.data
-
-        // Clear existing weeklyList
-        this.clearWeeklyList()
-
-        // Populate weeklyList with days from the fetched week
-        if (weekData.days) {
-          weekData.days.forEach((day) => {
-            const dayName = new Date(day.date).toLocaleDateString('en-US', { weekday: 'long' })
-            this.weeklyList[dayName].push(...day.recipes)
-          })
-        }
-        console.log('Loaded week data:', weekData)
-      } catch (error) {
-        console.error('Error fetching or creating the current week:', error)
-      }
-    },
-    addRecipe(event, day) {
-      console.log('In addRecipe')
-      const recipeData = event.dataTransfer.getData('application/json')
-      if (recipeData) {
-        const recipe = JSON.parse(recipeData)
-        this.weeklyList[day].push(recipe)
-        console.log(
-          'All recipes saved in ' + day + ': ' + JSON.stringify(this.weeklyList[day], null, 2),
-        )
-      }
-    },
-    deleteRecipe(day, index) {
-      this.weeklyList[day].splice(index, 1)
-    },
-    // ClearWeeklyList nwe 11Dec
-    clearWeeklyList() {
-      Object.keys(this.weeklyList).forEach(day => {
-        this.weeklyList[day] = [];
-      });
-    }
-  },
-  mounted() {
-    this.fetchOrCreateWeek();
-  },
+const clearWeeklyList = () => {
+  Object.keys(weeklyList.value).forEach(day => {
+    weeklyList.value[day] = []
+  })
 }
+
+const fetchOrCreateWeek = async () => {
+  try {
+    const userId = getUserId()
+    if (!userId) {
+      console.error('User ID is not found in local storage')
+      return
+    }
+
+    console.log('Fetching week for user:', userId)
+    const response = await axios.get(`/weeks/current/${userId}`)
+    const weekData = response.data
+
+    console.log('Received week data:', weekData)
+    clearWeeklyList()
+
+    if (weekData.days) {
+      weekData.days.forEach((day) => {
+        if (day.date) {
+          const date = new Date(day.date)
+          const dayName = date.toLocaleDateString('en-US', { weekday: 'long' })
+          if (weeklyList.value[dayName]) {
+            weeklyList.value[dayName].push(...(day.recipes || []))
+          }
+        }
+      })
+    }
+  } catch (error) {
+    console.error('Error fetching week:', error.response?.data || error)
+    if (error.response?.status === 401) {
+      router.push('/login')
+    }
+  }
+}
+
+const addRecipe = (event, day) => {
+  console.log('In addRecipe')
+  const recipeData = event.dataTransfer.getData('application/json')
+  if (recipeData) {
+    const recipe = JSON.parse(recipeData)
+    weeklyList.value[day].push(recipe)
+    console.log('All recipes saved in ' + day + ':', weeklyList.value[day])
+  }
+}
+
+const deleteRecipe = (day, index) => {
+  weeklyList.value[day].splice(index, 1)
+}
+
+onMounted(() => {
+  fetchOrCreateWeek()
+})
 </script>
 
 <style>
