@@ -112,30 +112,30 @@
 					</excludes>
 				</configuration>
 				<!-- New 14Dec -->
-				<executions>
+				<!--<executions>
 					<execution>
 						<id>run-after-tests</id>
 						<phase>verify</phase>
 						<goals>
-							<goal>run</goal> <!-- Runs the application after tests pass -->
+							<goal>run</goal>
 						</goals>
 					</execution>
-				</executions>
+				</executions>-->
 			</plugin>
-			<plugin>
+			<!--<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.1.2</version>
 				<executions>
 					<execution>
 						<id>default-test</id>
-						<phase>test</phase> <!-- Runs tests during the test phase -->
+						<phase>test</phase>
 						<goals>
 							<goal>test</goal>
 						</goals>
 					</execution>
 				</executions>
-			</plugin>
+			</plugin> -->
 		</plugins>
 	</build>
 
