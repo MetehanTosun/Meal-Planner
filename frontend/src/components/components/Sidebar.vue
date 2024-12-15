@@ -2,18 +2,16 @@
   <div class="sidebar">
     <div class="sidebar-header"><p>Recipes</p></div>
 
-    <!-- Searchbar -->
     <SearchbarComponent @update:filtered-recipes="applyDietFilter" />
 
-    <!-- Diet Filter Section -->
     <div class="diet-filter">
       <p>Filter:</p>
       <label>
-        <input type="checkbox" value="vegetarian" v-model="dietFilter" @change="handleDietChange" />
+        <input type="checkbox" value="VEGETARIAN" v-model="dietFilter" @change="handleDietChange" />
         Vegetarisch
       </label>
       <label>
-        <input type="checkbox" value="vegan" v-model="dietFilter" @change="handleDietChange" />
+        <input type="checkbox" value="VEGAN" v-model="dietFilter" @change="handleDietChange" />
         Vegan
       </label>
     </div>
@@ -24,22 +22,27 @@
       </button>
     </div>
 
-    <!-- Recipe List -->
     <ul class="recipe-list">
-      <li v-for="(item, index) in filteredRecipes" :key="index" :draggable="true" @dragstart="dragStart($event, item)" @dragend="dragEnd()">
+      <li v-for="item in filteredRecipes"
+          :key="item.id"
+          :draggable="true"
+          @dragstart="dragStart($event, item)"
+          @dragend="dragEnd()">
         <p>{{ item.name }}</p>
       </li>
     </ul>
 
-    <!-- Add CreateRecipeView component here -->
-    <CreateRecipeView ref="createRecipeModal" />
+    <CreateRecipeView
+      ref="createRecipeModal"
+      @recipe-created="handleRecipeCreated"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import axios from '@/axios';
 import SearchbarComponent from './SearchbarComponent.vue';
-import { mockRecipes } from '@/classes/MockRecipe.js';
 import CreateRecipeView from './CreateRecipeView.vue';
 
 // Props
@@ -54,16 +57,37 @@ defineProps({
 const emit = defineEmits(['update:filtered-recipes']);
 
 // Reactive variables
+const recipes = ref([]);
 const draggedItem = ref(null);
 const dietFilter = ref([]);
 const createRecipeModal = ref(null);
 
-// Methods
+// Fetch recipes from backend
+const fetchRecipes = async () => {
+  try {
+    const response = await axios.get('/recipes');
+    console.log('Fetched recipes:', response.data);
+    recipes.value = response.data;
+    applyDietFilter(recipes.value);
+  } catch (error) {
+    console.error('Error fetching recipes:', error);
+    recipes.value = [];
+  }
+};
+
 const dragStart = (event, item) => {
   if (draggedItem.value === null) {
     draggedItem.value = item;
-    event.dataTransfer.setData("application/json", JSON.stringify(item));
-    console.log("Currently Dragged Item:", JSON.stringify(item, null, 2));
+    // Format the recipe for drag & drop
+    const dragData = {
+      id: item.id,
+      name: item.name,
+      time: item.time,
+      foodtype: item.foodtype,
+      ingredients: item.ingredients || []
+    };
+    event.dataTransfer.setData("application/json", JSON.stringify(dragData));
+    console.log("Currently Dragged Item:", JSON.stringify(dragData, null, 2));
   }
 };
 
@@ -71,33 +95,37 @@ const dragEnd = () => {
   draggedItem.value = null;
 };
 
-// Handles changes in the diet filter
 const handleDietChange = () => {
-  // Only one checkbox can be selected at a time
   if (dietFilter.value.length > 1) {
     dietFilter.value = [dietFilter.value[dietFilter.value.length - 1]];
   }
-
-  // Trigger filtering based on diet
-  applyDietFilter();
+  applyDietFilter(recipes.value);
 };
 
-const applyDietFilter = (recipes = []) => {
-  const sourceRecipes = recipes.length > 0 ? recipes : mockRecipes;
+const applyDietFilter = (recipeList = []) => {
   const currentFilter = dietFilter.value[0];
   const filtered = !currentFilter
-    ? sourceRecipes
-    : sourceRecipes.filter(recipe => recipe.diet.includes(currentFilter));
+    ? recipeList
+    : recipeList.filter(recipe => recipe.foodtype === currentFilter);
 
   emit('update:filtered-recipes', filtered);
 };
 
-// For CreateRecipeView
 const openCreateRecipe = () => {
   if (createRecipeModal.value) {
     createRecipeModal.value.showModal = true;
   }
 };
+
+const handleRecipeCreated = () => {
+  console.log('Recipe created, refreshing list...');
+  fetchRecipes();
+};
+
+// Initial load
+onMounted(() => {
+  fetchRecipes();
+});
 </script>
 
 <style scoped>
