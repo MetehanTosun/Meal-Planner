@@ -59,6 +59,10 @@ public class Recipe {
     @ManyToMany(mappedBy = "recipes")
     private List<Day> days = new ArrayList<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User creator;
+
     public Recipe(){}
 
     public Recipe(String name, FoodType foodtype, List<Ingredient> ingredients, List<String> instructions, int time) {

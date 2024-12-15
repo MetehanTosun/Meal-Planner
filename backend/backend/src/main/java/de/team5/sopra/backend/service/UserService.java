@@ -2,35 +2,39 @@ package de.team5.sopra.backend.service;
 
 import de.team5.sopra.backend.models.User;
 import de.team5.sopra.backend.repository.UserRepository;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
-public class UserService {
+@RequiredArgsConstructor
+public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;  // Wird jetzt als Bean injiziert
 
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = new BCryptPasswordEncoder();
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+
+        return org.springframework.security.core.userdetails.User.builder()
+                .username(user.getUsername())
+                .password(user.getPassword())
+                .roles("USER")
+                .build();
     }
 
-    public User getUserById(Long id){
-        Optional<User> user = userRepository.findById(id);
-        if(user.isPresent()){
-            return user.get();
-        }else{
-            throw new IllegalArgumentException("User not found");
-        }
+    public User getUserById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
-
 
     public User registerUser(String username, String password) {
-        System.out.println(username+" "+ password);
-        if (userRepository.findByUsername(username) != null) {
+        if (userRepository.findByUsername(username).isPresent()) {
             throw new IllegalArgumentException("Benutzername bereits vergeben!");
         }
         User user = new User();
@@ -40,15 +44,13 @@ public class UserService {
     }
 
     public User authenticateUser(String username, String password) {
-        User user = userRepository.findByUsername(username);
-        if (user != null && passwordEncoder.matches(password, user.getPassword())) {
-            return user;
-        }
-        return null;
+        return userRepository.findByUsername(username)
+                .filter(user -> passwordEncoder.matches(password, user.getPassword()))
+                .orElse(null);
     }
 
-    public Optional<User> findById(Long userId) {
-        return userRepository.findById(userId);
+    public User getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User with username " + username + " not found"));
     }
-
 }

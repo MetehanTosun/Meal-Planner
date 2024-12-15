@@ -1,6 +1,3 @@
-Author: Ethan Banovic
-Description: This component handles the entire login functionality localy, using component
-api of vue 3 and axios.
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -13,16 +10,7 @@ const password = ref('')
 
 /**
  * Attempts to log in a user by sending a POST request to the login endpoint.
- * The function sends the user's username and password in the request body using Axios.
- * If the login is successful, the server responds with user data; otherwise,
- * an error is thrown based on the response status code.
- *
- * @async
- * @function sendLogin
- * @throws {Error} Throws an error if the login attempt fails:
- *                 - "Wrong username or password!" for a 401 response.
- *                 - "Unexpected Error during login: <error details>" for other issues.
- * @returns {Promise<axios.AxiosResponse<any>>} The Axios response from the server if the request succeeds.
+ * @returns {Promise<axios.AxiosResponse<any>>} The Axios response from the server.
  */
 const sendLogin = async () => {
   try {
@@ -42,18 +30,11 @@ const sendLogin = async () => {
     }
   }
 }
+
 /**
- * Handles the user login process by validating input fields,
- * calling the sendLogin function to authenticate the user,
- * and processing the server response.
- *
- * @async
- * @function handleLogin
- * @throws {Error} If the login attempt fails:
- *                 - Displays an alert and clears input fields for incorrect credentials.
- *                 - Displays a generic error alert for unexpected issues.
+ * Handles the user login process.
  */
-const handleLogin = async () => {
+ const handleLogin = async () => {
   if (!username.value || !password.value) {
     alert('Please fill in both fields.')
     return
@@ -61,9 +42,19 @@ const handleLogin = async () => {
   try {
     const response = await sendLogin()
     if (response.status === 200) {
+      // Debug logs
+      console.log('Login response:', response.data)
+
+      const token = response.data.token
+      if (token) {
+        localStorage.setItem('token', token)
+        console.log('Token stored:', localStorage.getItem('token'))
+      } else {
+        console.error('No token in response data:', response.data)
+      }
+
+      setUserId(response.data.userId)
       alert('Successfully logged in!')
-      setUserId(response.userId)
-      //console.log('Logging in with:', username.value, password.value)
       router.push('/')
     }
   } catch (error) {

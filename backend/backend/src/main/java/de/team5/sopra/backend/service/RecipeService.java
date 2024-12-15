@@ -3,6 +3,7 @@ package de.team5.sopra.backend.service;
 import de.team5.sopra.backend.models.Ingredient;
 import de.team5.sopra.backend.models.Recipe;
 
+import de.team5.sopra.backend.models.User;
 import de.team5.sopra.backend.repository.RecipeRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,15 +51,10 @@ public class RecipeService {
      * 'cascade = ALL' im Recipe-Entity sorgt dafür, dass die Ingredients automatisch gespeichert werden.
      */
     public Recipe createRecipe(Recipe recipe) {
-
-        if (recipe.getIngredients() != null) {
-            for (Ingredient ing : recipe.getIngredients()) {
-                ing.setRecipe(recipe);
-            }
+        if (recipe.getCreator() == null) {
+            throw new IllegalArgumentException("Recipe must have a creator");
         }
-
-        Recipe savedRecipe = recipeRepository.save(recipe);
-        return savedRecipe;
+        return recipeRepository.save(recipe);
     }
 
     /**
@@ -120,6 +116,10 @@ public class RecipeService {
     public List<String> getInstructions(Long recipeId) {
         Recipe recipe = getRecipeById(recipeId);
         return recipe.getInstructions();
+    }
+
+    public List<Recipe> getAllRecipesByUser(User user) {
+        return recipeRepository.findByCreator(user);
     }
 
 }

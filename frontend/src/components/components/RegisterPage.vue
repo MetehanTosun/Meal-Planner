@@ -1,53 +1,41 @@
-Author: Ethan Banovic
-Description: This component handles the entire register functionality localy, using
-component api of vue 3 and axios.
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import axios from '@/axios'
 
 const router = useRouter()
 const username = ref('')
 const password = ref('')
 
-/**
- * Sends the current user registration data to the backend to create a new user entity.
- * This function uses Axios to make a POST request with the `username` and `password`
- * stored in reactive variables. It logs the attempt and returns the server's response.
- *
- * @async
- * @function sendNewUser
- * @returns {Promise<axios.AxiosResponse<any>>} The Axios response object from the backend.
- */
 const sendNewUser = async () => {
-  console.log('Attempt Registration: ')
+  console.log('Attempt Registration: ', {
+    username: username.value,
+    password: password.value
+  })
 
-  return await axios.post('http://localhost:8080/auth/register', {
+  return await axios.post('/auth/register', {
     username: username.value,
     password: password.value,
-  }, )
+  })
 }
 
-/**
- * Handles the next steps after a registration attempt, including processing
- * the server response and navigating the user to the login page upon success.
- *
- * @async
- * @function handleRegister
- * @throws {Error} Logs the error and alerts the user if registration fails.
- * @returns {void}
- */
 const handleRegister = async () => {
+  if (!username.value || !password.value) {
+    alert('Bitte fülle alle Felder aus!')
+    return
+  }
+
   try {
     const response = await sendNewUser()
-    console.log(response)
+    console.log('Registration response:', response)
+
     if (response.status === 200) {
-      alert('Your account was created!')
+      alert('Dein Account wurde erstellt!')
       router.push('/login')
     }
   } catch (err) {
-    console.log('Failed to Register: ' + err)
-    alert('Failed to Register!')
+    console.error('Failed to Register:', err.response?.data || err)
+    alert(err.response?.data?.message || 'Registrierung fehlgeschlagen!')
   }
 }
 </script>

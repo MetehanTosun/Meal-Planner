@@ -52,8 +52,10 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
+import axios from '@/axios';
 
 const showModal = ref(false)
+const errorMessage = ref('')
 const recipe = reactive({
   name: '',
   time: null,
@@ -80,14 +82,69 @@ const removeIngredient = (index) => {
   recipe.ingredients.splice(index, 1)
 }
 
-const saveRecipe = () => {
-  // Hier API-Aufruf implementieren
-  console.log('Recipe to save:', recipe)
-  closeModal()
+const validateRecipe = () => {
+  if (!recipe.name || recipe.name.trim() === '') {
+    throw new Error('Bitte geben Sie einen Rezeptnamen ein')
+  }
+  if (!recipe.time || recipe.time <= 0) {
+    throw new Error('Bitte geben Sie eine gültige Zubereitungszeit ein')
+  }
+  if (!recipe.ingredients.length) {
+    throw new Error('Bitte fügen Sie mindestens eine Zutat hinzu')
+  }
+  for (const ingredient of recipe.ingredients) {
+    if (!ingredient.name || ingredient.name.trim() === '') {
+      throw new Error('Bitte geben Sie für alle Zutaten einen Namen ein')
+    }
+    if (!ingredient.amount || ingredient.amount <= 0) {
+      throw new Error('Bitte geben Sie für alle Zutaten eine gültige Menge ein')
+    }
+    if (!ingredient.unit) {
+      throw new Error('Bitte wählen Sie für alle Zutaten eine Einheit aus')
+    }
+  }
+  if (!recipe.foodType) {
+    throw new Error('Bitte wählen Sie eine Art des Gerichts aus')
+  }
+}
+
+const saveRecipe = async () => {
+  try {
+    validateRecipe()
+
+    const recipeToSend = {
+      name: recipe.name,
+      time: parseInt(recipe.time),
+      foodtype: recipe.foodType,
+      ingredients: recipe.ingredients.map(ingredient => ({
+        name: ingredient.name,
+        amount: parseInt(ingredient.amount),
+        unit: ingredient.unit,
+      })),
+      instructions: []
+    }
+
+    console.log('Sending recipe:', recipeToSend)
+
+    const response = await axios.post('/recipes', recipeToSend)
+    console.log('Recipe saved successfully:', response.data)
+
+    closeModal()
+    emit('recipe-created')
+    alert('Rezept erfolgreich gespeichert!')
+  } catch (error) {
+    console.error('Save recipe error:', error)
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      return
+    }
+    // errors
+    errorMessage.value = error.response?.data?.message || error.message
+  }
 }
 
 const closeModal = () => {
   showModal.value = false
+  errorMessage.value = ''
   // Reset form
   recipe.name = ''
   recipe.time = null
@@ -98,6 +155,9 @@ const closeModal = () => {
   }]
   recipe.foodType = 'MEAT'
 }
+
+// Event Emitter für Recipe Created Event
+const emit = defineEmits(['recipe-created'])
 
 // Expose necessary methods
 defineExpose({

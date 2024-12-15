@@ -4,7 +4,8 @@ import Recipe from "./RecipeTemp"
 class MockRecipe extends Recipe {
     constructor(name, ingredients, instructions, time) {
         super(name, ingredients, instructions, time)
-    }
+
+      }
 }
 
 // MockRecipe Objects to test functionality of the App

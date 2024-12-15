@@ -1,13 +1,17 @@
 package de.team5.sopra.backend.controller;
 
 
+import de.team5.sopra.backend.exception.ForbiddenException;
 import de.team5.sopra.backend.models.Recipe;
+import de.team5.sopra.backend.models.User;
 import de.team5.sopra.backend.service.RecipeService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import de.team5.sopra.backend.models.Ingredient;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,17 +19,18 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/recipes")
+@RequiredArgsConstructor(onConstructor_ = {@Autowired})
 public class RecipeController {
 
-    @Autowired
-    private RecipeService recipeService;
+    private final RecipeService recipeService;
 
     /**
      * GET /recipes : Liste aller Rezepte
      */
     @GetMapping
     public List<Recipe> getAllRecipes() {
-        return recipeService.getAllRecipes();
+        User currentUser = getCurrentUser();
+        return recipeService.getAllRecipesByUser(currentUser);
     }
 
     /**
@@ -42,6 +47,8 @@ public class RecipeController {
      */
     @PostMapping
     public ResponseEntity<Recipe> createRecipe(@Valid @RequestBody Recipe recipeRequest) {
+        User currentUser = getCurrentUser();
+        recipeRequest.setCreator(currentUser);
         Recipe createdRecipe = recipeService.createRecipe(recipeRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdRecipe);
     }
@@ -59,6 +66,13 @@ public class RecipeController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRecipe(@PathVariable Long id) {
+        User currentUser = getCurrentUser();
+        Recipe recipe = recipeService.getRecipeById(id);
+
+        if (!recipe.getCreator().equals(currentUser)) {
+            throw new ForbiddenException("You can only delete your own recipes");
+        }
+
         recipeService.deleteRecipeById(id);
         return ResponseEntity.noContent().build();
     }
@@ -89,6 +103,10 @@ public class RecipeController {
     @GetMapping("/{id}/instructions")
     public List<String> getInstructions(@PathVariable Long id) {
         return recipeService.getInstructions(id);
+    }
+
+    private User getCurrentUser() {
+        return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
 }
