@@ -16,7 +16,7 @@ git clone <repository-url>
 cd <repository-folder>
 ```
 ## Frontend
- The frontend for the web application is in the /frintend directory
+ The frontend for the web application is in the /frontend directory
 ## Backend
 
 The backend is in the /backend/backend directory
@@ -25,32 +25,8 @@ The backend is in the /backend/backend directory
 ```bash
 mvn clean install
 ```
-### 3. Configure the API Key
 
-The application requires a Gustar.io API key to interact with the extern API. Set it as an environment variable:
-
-Go to [https://rapidapi.com/gustario-gustario-default/api/gustar-io-deutsche-rezepte](https://rapidapi.com/gustario-gustario-default/api/gustar-io-deutsche-rezepte)
-
-Create a free Account and retrieve your personal API Key
-
-
-#### On Linux/Mac:
-```bash
-export GUSTAR_API_KEY=<your-api-key>
-```
-
-#### On Windows (PowerShell):
-```powershell
-$env:GUSTAR_API_KEY="<your-api-key>"
-```
-
-**Important**: Make sure the variable `GUSTAR_API_KEY` matches the name used in `application.properties`:
-
-```properties
-spring.sendgrid.api-key=${GUSTAR_API_KEY}
-```
-
-### 4. Run the application
+### 3. Run the application
 
 Run the project with Maven:
 ```bash
