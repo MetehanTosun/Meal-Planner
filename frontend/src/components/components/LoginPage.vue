@@ -1,70 +1,46 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import axios from '@/axios'
 import { setUserId } from '@/storage/userStorage.js'
 
 const router = useRouter()
 const username = ref('')
 const password = ref('')
+const errorMessage = ref('')
 
-/**
- * Attempts to log in a user by sending a POST request to the login endpoint.
- * @returns {Promise<axios.AxiosResponse<any>>} The Axios response from the server.
- */
 const sendLogin = async () => {
   try {
-    const response = await axios.post('http://localhost:8080/auth/login', {
+    const response = await axios.post('/auth/login', {
       username: username.value,
-      password: password.value,
+      password: password.value
     })
     return response
   } catch (error) {
-    if (error.response && error.response.status === 401) {
-      console.log('Wrong Login Data: ' + error)
-      throw new Error('Wrong username or password!')
-    } else {
-      alert('An unexpected error occurred.')
-      console.log('Unexpected Error during login: ' + error)
-      throw new Error('Unexpected Error during login: ' + error)
-    }
+    console.error('Login error:', error)
+    throw error
   }
 }
 
-/**
- * Handles the user login process.
- */
- const handleLogin = async () => {
+const handleLogin = async () => {
   if (!username.value || !password.value) {
-    alert('Please fill in both fields.')
+    errorMessage.value = 'Please fill in both fields.'
     return
   }
+
   try {
     const response = await sendLogin()
-    if (response.status === 200) {
-      // Debug logs
-      console.log('Login response:', response.data)
-
-      const token = response.data.token
-      if (token) {
-        localStorage.setItem('token', token)
-        console.log('Token stored:', localStorage.getItem('token'))
-      } else {
-        console.error('No token in response data:', response.data)
-      }
-
+    if (response.data.userId) {
       setUserId(response.data.userId)
-      alert('Successfully logged in!')
       router.push('/')
+    } else {
+      errorMessage.value = 'Login failed. Please check your credentials.'
     }
   } catch (error) {
-    if (error.message === 'Wrong username or password!') {
-      alert('Wrong username or password!')
-      username.value = ''
-      password.value = ''
-    } else {
-      alert('Unexpected Error during login. Try again later.')
-    }
+    console.error('Login error:', error)
+    errorMessage.value = error.response?.data || 'Login failed. Please try again.'
+    username.value = ''
+    password.value = ''
   }
 }
 </script>
@@ -86,6 +62,9 @@ const sendLogin = async () => {
             v-model="password"
             placeholder="Enter your password"
           />
+        </div>
+        <div v-if="errorMessage" class="error-message">
+          {{ errorMessage }}
         </div>
         <button class="login-button" type="submit">Login</button>
       </form>
@@ -162,6 +141,12 @@ const sendLogin = async () => {
 .form-group input::placeholder {
   color: #9ca3af;
   font-style: italic;
+}
+
+.error-message {
+  color: #ef4444;
+  margin-bottom: 15px;
+  font-size: 14px;
 }
 
 .login-button {

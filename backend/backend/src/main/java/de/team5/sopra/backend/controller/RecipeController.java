@@ -1,41 +1,37 @@
 package de.team5.sopra.backend.controller;
 
-
 import de.team5.sopra.backend.dto.RecipeDTO;
 import de.team5.sopra.backend.exception.ForbiddenException;
 import de.team5.sopra.backend.models.Recipe;
 import de.team5.sopra.backend.models.User;
 import de.team5.sopra.backend.service.RecipeService;
-import jakarta.validation.Valid;
+import de.team5.sopra.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import de.team5.sopra.backend.models.Ingredient;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-
 @RestController
 @RequestMapping("/recipes")
-@RequiredArgsConstructor(onConstructor_ = {@Autowired})
+@RequiredArgsConstructor
 public class RecipeController {
 
     private final RecipeService recipeService;
+    private final UserService userService;
 
-    private static final Logger log = LoggerFactory.getLogger(RecipeController.class);
-
-    /**
-     * GET /recipes : Liste aller Rezepte
-     */
     @GetMapping
-    public List<Recipe> getAllRecipes() {
-        User currentUser = getCurrentUser();
-        return recipeService.getAllRecipesByUser(currentUser);
+    public ResponseEntity<?> getAllRecipes(@RequestHeader("User-Id") Long userId) {
+        try {
+            User user = userService.getUserById(userId);
+            List<Recipe> recipes = recipeService.getAllRecipesByUser(user);
+            return ResponseEntity.ok(recipes);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
     }
 
     /**
@@ -51,16 +47,15 @@ public class RecipeController {
      * Erwartet im RequestBody ein JSON, das auch "ingredients" als Array von Ingredient-Objekten enthält.
      */
     @PostMapping
-    public ResponseEntity<RecipeDTO> createRecipe(@Valid @RequestBody Recipe recipeRequest) {
+    public ResponseEntity<?> createRecipe(@RequestHeader("User-Id") Long userId,
+                                          @RequestBody Recipe recipe) {
         try {
-            User currentUser = getCurrentUser();
-            recipeRequest.setCreator(currentUser);
-            Recipe createdRecipe = recipeService.createRecipe(recipeRequest);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(RecipeDTO.fromRecipe(createdRecipe));
+            User user = userService.getUserById(userId);
+            recipe.setCreator(user);
+            Recipe created = recipeService.createRecipe(recipe);
+            return ResponseEntity.ok(created);
         } catch (Exception e) {
-            log.error("Error creating recipe", e);
-            throw e;
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
 
@@ -117,7 +112,9 @@ public class RecipeController {
     }
 
     private User getCurrentUser() {
-        return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        return userService.getUserByUsername(username);
     }
 
 }

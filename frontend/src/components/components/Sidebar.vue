@@ -40,45 +40,51 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import axios from '@/axios';
-import SearchbarComponent from './SearchbarComponent.vue';
-import CreateRecipeView from './CreateRecipeView.vue';
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import axios from '@/axios'
+import { getUserId } from '@/storage/userStorage'
+import SearchbarComponent from './SearchbarComponent.vue'
+import CreateRecipeView from './CreateRecipeView.vue'
 
-// Props
+const router = useRouter()
+const recipes = ref([])
+const draggedItem = ref(null)
+const dietFilter = ref([])
+const createRecipeModal = ref(null)
+
 defineProps({
   filteredRecipes: {
     type: Array,
     required: true
   }
-});
+})
 
-// Emits
-const emit = defineEmits(['update:filtered-recipes']);
+const emit = defineEmits(['update:filtered-recipes'])
 
-// Reactive variables
-const recipes = ref([]);
-const draggedItem = ref(null);
-const dietFilter = ref([]);
-const createRecipeModal = ref(null);
-
-// Fetch recipes from backend
 const fetchRecipes = async () => {
   try {
-    const response = await axios.get('/recipes');
-    console.log('Fetched recipes:', response.data);
-    recipes.value = response.data;
-    applyDietFilter(recipes.value);
+    if (!getUserId()) {
+      router.push('/login')
+      return
+    }
+
+    const response = await axios.get('/recipes')
+    console.log('Fetched recipes:', response.data)
+    recipes.value = response.data
+    applyDietFilter(recipes.value)
   } catch (error) {
-    console.error('Error fetching recipes:', error);
-    recipes.value = [];
+    console.error('Error fetching recipes:', error)
+    recipes.value = []
+    if (error.response?.status === 401) {
+      router.push('/login')
+    }
   }
-};
+}
 
 const dragStart = (event, item) => {
   if (draggedItem.value === null) {
     draggedItem.value = item;
-    // Format the recipe for drag & drop
     const dragData = {
       id: item.id,
       name: item.name,

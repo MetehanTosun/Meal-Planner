@@ -29,8 +29,9 @@
 import { ref, onMounted } from 'vue'
 import axios from '@/axios'
 import { getUserId } from '@/storage/userStorage'
-import router from 'express/lib/router';
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 const weeklyList = ref({
   Monday: [],
@@ -52,7 +53,7 @@ const fetchOrCreateWeek = async () => {
   try {
     const userId = getUserId()
     if (!userId) {
-      console.error('User ID is not found in local storage')
+      router.push('/login')
       return
     }
 
@@ -69,26 +70,22 @@ const fetchOrCreateWeek = async () => {
           const date = new Date(day.date)
           const dayName = date.toLocaleDateString('en-US', { weekday: 'long' })
           if (weeklyList.value[dayName]) {
-            weeklyList.value[dayName].push(...(day.recipes || []))
+            weeklyList.value[dayName] = day.recipes || []
           }
         }
       })
     }
   } catch (error) {
-    console.error('Error fetching week:', error.response?.data || error)
-    if (error.response?.status === 401) {
-      router.push('/login')
-    }
+    console.error('Error fetching week:', error)
   }
 }
 
 const addRecipe = (event, day) => {
-  console.log('In addRecipe')
   const recipeData = event.dataTransfer.getData('application/json')
   if (recipeData) {
     const recipe = JSON.parse(recipeData)
     weeklyList.value[day].push(recipe)
-    console.log('All recipes saved in ' + day + ':', weeklyList.value[day])
+    console.log('Recipe added to ' + day + ':', recipe)
   }
 }
 
@@ -97,6 +94,10 @@ const deleteRecipe = (day, index) => {
 }
 
 onMounted(() => {
+  if (!getUserId()) {
+    router.push('/login')
+    return
+  }
   fetchOrCreateWeek()
 })
 </script>
