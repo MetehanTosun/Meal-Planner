@@ -28,7 +28,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from '@/axios'
-import { getUserId } from '@/storage/userStorage'
+import { getUserId } from '@/storage/localStorageManagement.js'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -119,13 +119,6 @@ onMounted(() => {
   width: 100%;
   gap: 15px;
   justify-content: space-between;
-}
-
-.day-label {
-  align-self: flex-start;
-  font-weight: bold;
-  font-size: 30px;
-  margin-bottom: 10px;
 }
 
 .drop-zone {

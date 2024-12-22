@@ -1,5 +1,6 @@
 package de.team5.sopra.backend.dto;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,6 +14,7 @@ public class AddRecipeToDayRequest {
 	@NotNull
 	private Long dayId;
 
-	private Integer portions; // Optional
+	@Min(1)
+	private Integer portions;
 }
 

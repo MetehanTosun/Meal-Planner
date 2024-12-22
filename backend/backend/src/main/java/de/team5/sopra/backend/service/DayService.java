@@ -1,5 +1,7 @@
 package de.team5.sopra.backend.service;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,145 +15,179 @@ import de.team5.sopra.backend.repository.general.UserSpecificRecipeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import de.team5.sopra.backend.models.Day;
 import de.team5.sopra.backend.models.Recipe;
 import de.team5.sopra.backend.repository.DayRepository;
 import jakarta.persistence.EntityNotFoundException;
 
-/*
- * Buisness Logic Layer
- */
 @Service
 public class DayService {
-    
-    @Autowired
-    private DayRepository dayRepository;
 
-    @Autowired
-    private RecipeRepository recipeRepository;
+	@Autowired
+	private DayRepository dayRepository;
 
-    @Autowired
-    private WeekRepository weekRepository;
+	@Autowired
+	private RecipeRepository recipeRepository;
 
-    private UserSpecificRecipeRepository userSpecificRecipeRepository;
+	@Autowired
+	private WeekRepository weekRepository;
 
-    /*
-     * This Operation retrieves every single day from the table.
-     */
-    public List<Day> getAllDays(){
-        return dayRepository.findAll();
-    }
+	@Autowired
+	private UserSpecificRecipeRepository userSpecificRecipeRepository;
 
-    public Day getDayById(Long id){
-        Optional<Day> searchedDay = dayRepository.findById(id);
-        if(searchedDay.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The day with the ID: "+id+" wasn't found.");
-        }
-        return searchedDay.get();
-    }
+	public List<Day> getAllDays() {
+		return dayRepository.findAll();
+	}
 
-    public Day saveDay(Day day){
-        return dayRepository.save(day);
-    }
-
-    public void deleteDay(Long id){
-        if(recipeRepository.existsById(id)){
-            dayRepository.deleteById(id);
-        }else{
-            throw new EntityNotFoundException("Day not found with id: "+id);
-        }
-    }
-
-    public Day addRecipeToDay(Long id, Recipe recipe){
-        Optional<Day> dayOptionalObject = dayRepository.findById(id);
-        if(dayOptionalObject.isPresent()){
-            Day day = dayOptionalObject.get();
-            List<Recipe> dayRecipeList = day.getRecipes();
-            dayRecipeList.add(recipe);
-            return dayRepository.save(day);
-        } else{
-            throw new EntityNotFoundException("No day with the ID: "+id+" exists.");
-        }
-    }
-
-    public void removeRecipeFromDay(Long dayId, Long recipeId) {
-        Day day = dayRepository.findById(dayId)
-                .orElseThrow(() -> new EntityNotFoundException("Day not found with id: " + dayId));
-
-        Recipe recipe = recipeRepository.findById(recipeId)
-                .orElseThrow(() -> new EntityNotFoundException("Recipe not found with id: " + recipeId));
-
-        if (day.getRecipes().contains(recipe)) {
-            day.getRecipes().remove(recipe);
-            dayRepository.save(day);
-        } else {
-            throw new IllegalArgumentException("Recipe is not assigned to the specified day.");
-        }
-    }
-    public Day createDay(DayRequest dayRequest) {
-        Day day = new Day();
-        day.setDate(dayRequest.getDate());
-
-        // Verknüpfe den Tag mit einer Woche, falls angegeben
-        if (dayRequest.getWeekId() != null) {
-            Week week = weekRepository.findById(dayRequest.getWeekId())
-                    .orElseThrow(() -> new EntityNotFoundException("Week not found with id: " + dayRequest.getWeekId()));
-            day.setWeek(week);
-        }
-
-        // Füge Rezepte hinzu, falls angegeben
-        if (dayRequest.getRecipeIds() != null && !dayRequest.getRecipeIds().isEmpty()) {
-            List<Recipe> recipes = recipeRepository.findAllById(dayRequest.getRecipeIds());
-            day.setRecipes(recipes);
-        }
+	public Day getDayById(Long id) {
+		return dayRepository.findById(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Day not found with ID: " + id));
+	}
 
 
-        return dayRepository.save(day);
-    }
-    public Day updateDay(Long id, DayRequest dayRequest) {
-        Optional<Day> dayOptional = dayRepository.findById(id);
-        if (dayOptional.isEmpty()) {
-            throw new EntityNotFoundException("Day not found with id: " + id);
-        }
-        Day day = dayOptional.get();
-        if (dayRequest.getDate() != null) {
-            day.setDate(dayRequest.getDate());
-        }
-        if (dayRequest.getWeekId() != null) {
-            Week week = weekRepository.findById(dayRequest.getWeekId())
-                    .orElseThrow(() -> new EntityNotFoundException("Week not found with id: " + dayRequest.getWeekId()));
-            day.setWeek(week);
-        }
-        if (dayRequest.getRecipeIds() != null && !dayRequest.getRecipeIds().isEmpty()) {
-            List<Recipe> recipes = recipeRepository.findAllById(dayRequest.getRecipeIds());
-            day.setRecipes(recipes);
-        }
-        return dayRepository.save(day);
-    }
-    //TODO: ADD THIS FUNCTION
-//    public Day addRecipeToDayWithIdAndPortion(AddRecipeToDayRequest request) {
-//        // Retrieve the Day
-//        Day day = dayRepository.findById(request.getDayId())
-//                .orElseThrow(() -> new IllegalArgumentException("Day not found with ID: " + request.getDayId()));
-//
-//        // Retrieve the Recipe
-//        Recipe recipe = recipeRepository.findById(request.getRecipeId())
-//                .orElseThrow(() -> new IllegalArgumentException("Recipe not found with ID: " + request.getRecipeId()));
-//
-//        // Create a UserSpecificRecipe
-//        UserSpecificRecipe userSpecificRecipe = new UserSpecificRecipe();
-//        userSpecificRecipe.setRecipe(recipe);
-//        userSpecificRecipe.setDay(day);
-//        if (request.getPortions() != null) {
-//            userSpecificRecipe.setPortions(request.getPortions());
-//        }
-//
-//        // Save the UserSpecificRecipe
-//        userSpecificRecipeRepository.save(userSpecificRecipe);
-//
-//        // Add the recipe to the Day
-//        day.getRecipes().add(userSpecificRecipe);
-//        return dayRepository.save(day);
-//    }
+	public Day saveDay(Day day) {
+		return dayRepository.save(day);
+	}
+
+	public void deleteDay(Long id) {
+		if (dayRepository.existsById(id)) {
+			dayRepository.deleteById(id);
+		} else {
+			throw new EntityNotFoundException("Day not found with id: " + id);
+		}
+	}
+
+	public Day addRecipeToDayWithPortions(Long dayId, Long recipeId, Integer portions) {
+		Day day = dayRepository.findById(dayId)
+				.orElseThrow(() -> new EntityNotFoundException("Day not found with id: " + dayId));
+
+		Recipe recipe = recipeRepository.findById(recipeId)
+				.orElseThrow(() -> new EntityNotFoundException("Recipe not found with id: " + recipeId));
+
+		if (portions == null || portions < 1) {
+			portions = 1;
+		}
+
+		UserSpecificRecipe userSpecificRecipe = new UserSpecificRecipe();
+		userSpecificRecipe.setDay(day);
+		userSpecificRecipe.setRecipe(recipe);
+		userSpecificRecipe.setPortions(portions);
+
+		userSpecificRecipeRepository.save(userSpecificRecipe);
+		day.getUserSpecificRecipes().add(userSpecificRecipe);
+
+		return dayRepository.save(day);
+	}
+
+	public void removeRecipeFromDay(Long dayId, Long recipeId) {
+		Day day = dayRepository.findById(dayId)
+				.orElseThrow(() -> new EntityNotFoundException("Day not found with id: " + dayId));
+
+		Optional<UserSpecificRecipe> userSpecificRecipe = day.getUserSpecificRecipes().stream()
+				.filter(usr -> usr.getRecipe().getId() == (recipeId))
+				.findFirst();
+
+		if (userSpecificRecipe.isPresent()) {
+			day.getUserSpecificRecipes().remove(userSpecificRecipe.get());
+			userSpecificRecipeRepository.delete(userSpecificRecipe.get());
+			dayRepository.save(day);
+		} else {
+			throw new IllegalArgumentException("Recipe is not assigned to the specified day.");
+		}
+	}
+
+	@Transactional
+	public Day createDay(DayRequest dayRequest) {
+
+		if (dayRequest.getDate() == null) {
+			throw new IllegalArgumentException("Date must not be null.");
+		}
+		if (dayRequest.getWeekId() == null) {
+			throw new IllegalArgumentException("WeekId must not be null.");
+		}
+
+		Week week = weekRepository.findById(dayRequest.getWeekId())
+				.orElseThrow(() ->
+						new EntityNotFoundException("Week not found with id: " + dayRequest.getWeekId())
+				);
+
+
+		List<DayRequest.RecipeWithPortion> recipeRequests =
+				Optional.ofNullable(dayRequest.getRecipes()).orElse(Collections.emptyList());
+
+
+		for (DayRequest.RecipeWithPortion recipeWithPortion : recipeRequests) {
+			if (recipeWithPortion.getRecipeId() == null || recipeWithPortion.getPortions() <= 0) {
+				throw new IllegalArgumentException("Invalid recipeId or portions in the request.");
+			}
+
+			if (!recipeRepository.existsById(recipeWithPortion.getRecipeId())) {
+				throw new EntityNotFoundException(
+						"Recipe not found with id: " + recipeWithPortion.getRecipeId()
+				);
+			}
+		}
+
+		Day day = new Day();
+		day.setDate(dayRequest.getDate());
+		day.setWeek(week);
+
+		day.setUserSpecificRecipes(new ArrayList<>());
+		day = dayRepository.save(day);
+
+		for (DayRequest.RecipeWithPortion recipeWithPortion : recipeRequests) {
+			Recipe recipe = recipeRepository.findById(recipeWithPortion.getRecipeId())
+					.orElseThrow(() ->
+							new EntityNotFoundException("Recipe not found with id: " + recipeWithPortion.getRecipeId())
+					);
+
+			UserSpecificRecipe usr = new UserSpecificRecipe();
+			usr.setDay(day);
+			usr.setRecipe(recipe);
+			usr.setPortions(recipeWithPortion.getPortions());
+
+			userSpecificRecipeRepository.save(usr);
+
+			day.getUserSpecificRecipes().add(usr);
+		}
+
+		return dayRepository.save(day);
+	}
+
+
+	public Day updateDay(Long id, DayRequest dayRequest) {
+		Day day = dayRepository.findById(id)
+				.orElseThrow(() -> new EntityNotFoundException("Day not found with id: " + id));
+
+		if (dayRequest.getDate() != null) {
+			day.setDate(dayRequest.getDate());
+		}
+
+		if (dayRequest.getWeekId() != null) {
+			Week week = weekRepository.findById(dayRequest.getWeekId())
+					.orElseThrow(() -> new EntityNotFoundException("Week not found with id: " + dayRequest.getWeekId()));
+			day.setWeek(week);
+		}
+
+		if (dayRequest.getRecipes() != null && !dayRequest.getRecipes().isEmpty()) {
+			day.getUserSpecificRecipes().clear();
+
+			for (DayRequest.RecipeWithPortion recipeWithPortion : dayRequest.getRecipes()) {
+				Recipe recipe = recipeRepository.findById(recipeWithPortion.getRecipeId())
+						.orElseThrow(() -> new EntityNotFoundException("Recipe not found with id: " + recipeWithPortion.getRecipeId()));
+
+				UserSpecificRecipe userSpecificRecipe = new UserSpecificRecipe();
+				userSpecificRecipe.setDay(day);
+				userSpecificRecipe.setRecipe(recipe);
+				userSpecificRecipe.setPortions(recipeWithPortion.getPortions());
+				userSpecificRecipeRepository.save(userSpecificRecipe);
+
+				day.getUserSpecificRecipes().add(userSpecificRecipe);
+			}
+		}
+
+		return dayRepository.save(day);
+	}
 }

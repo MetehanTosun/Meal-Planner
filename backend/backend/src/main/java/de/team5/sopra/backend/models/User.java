@@ -31,6 +31,8 @@ public class User {
     @JsonManagedReference
     private List<Week> weeks;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Recipe> recipes;
 
     public User() {
 

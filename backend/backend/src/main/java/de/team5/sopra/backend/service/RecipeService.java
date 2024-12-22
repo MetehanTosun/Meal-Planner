@@ -1,5 +1,6 @@
 package de.team5.sopra.backend.service;
 
+import de.team5.sopra.backend.dto.RecipeCreationDTO;
 import de.team5.sopra.backend.models.Ingredient;
 import de.team5.sopra.backend.models.Recipe;
 
@@ -51,9 +52,10 @@ public class RecipeService {
      * 'cascade = ALL' im Recipe-Entity sorgt dafür, dass die Ingredients automatisch gespeichert werden.
      */
     public Recipe createRecipe(Recipe recipe) {
-        if (recipe.getCreator() == null) {
+        if (recipe.getUser() == null) {
             throw new IllegalArgumentException("Recipe must have a creator");
         }
+
         return recipeRepository.save(recipe);
     }
 
@@ -65,7 +67,7 @@ public class RecipeService {
         Recipe existing = getRecipeById(id);
 
         existing.setName(requestBody.getName());
-        existing.setFoodtype(requestBody.getFoodtype());
+        existing.setFoodType(requestBody.getFoodType());
         existing.setTime(requestBody.getTime());
         existing.setInstructions(requestBody.getInstructions());
 
@@ -85,7 +87,9 @@ public class RecipeService {
      * Löscht ein Recipe samt Ingredients (wegen orphanRemoval=true)
      */
     public void deleteRecipeById(Long id) {
-        // Check, ob existiert
+        if(!recipeRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found!");
+        }
         getRecipeById(id);
         recipeRepository.deleteById(id);
     }
@@ -119,7 +123,7 @@ public class RecipeService {
     }
 
     public List<Recipe> getAllRecipesByUser(User user) {
-        return recipeRepository.findByCreator(user);
+        return recipeRepository.findByUser(user);
     }
 
 }

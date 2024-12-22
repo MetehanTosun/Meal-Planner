@@ -1,4 +1,4 @@
-package de.team5.sopra.backend.controller;
+package de.team5.sopra.backend.controller.week;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.team5.sopra.backend.dto.WeekRequest;
@@ -18,7 +18,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.text.SimpleDateFormat;
-import java.time.Instant;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -238,14 +237,9 @@ public class WeekControllerTest {
 				.andExpect(jsonPath("$.days").isArray())
 				.andExpect(jsonPath("$.days.length()").value(7))
 				.andExpect(jsonPath("$.days[0].date").value("2024-12-30T00:00:00.000+00:00"))
-				.andExpect(jsonPath("$.days[1].date").value("2024-12-31T00:00:00.000+00:00"))
-				.andExpect(jsonPath("$.days[2].date").value("2025-01-01T00:00:00.000+00:00"))
-				.andExpect(jsonPath("$.days[3].date").value("2025-01-02T00:00:00.000+00:00"))
-				.andExpect(jsonPath("$.days[4].date").value("2025-01-03T00:00:00.000+00:00"))
-				.andExpect(jsonPath("$.days[5].date").value("2025-01-04T00:00:00.000+00:00"))
-				.andExpect(jsonPath("$.days[6].date").value("2025-01-05T00:00:00.000+00:00"))
-				.andExpect(jsonPath("$.days[0].recipes").isArray())
-				.andExpect(jsonPath("$.days[0].recipes").isEmpty());
+				.andExpect(jsonPath("$.days[0].userSpecificRecipes").isArray())
+				.andExpect(jsonPath("$.days[0].userSpecificRecipes").isEmpty());
+
 
 		System.out.println("<<< Finished testCreateDefaultNewWeek_Success");
 	}

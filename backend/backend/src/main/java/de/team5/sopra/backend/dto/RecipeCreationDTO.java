@@ -1,12 +1,20 @@
 package de.team5.sopra.backend.dto;
 
+import de.team5.sopra.backend.models.User;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
+@Setter
 public class RecipeCreationDTO {
+
+	@NotNull
+	private User user;
 
 	@NotBlank(message = "Recipe name cannot be empty")
 	private String name;
@@ -23,44 +31,5 @@ public class RecipeCreationDTO {
 	@NotNull(message = "Ingredients cannot be null")
 	private List<IngredientDetailDTO> ingredients = new ArrayList<>();
 
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public int getTime() {
-		return time;
-	}
-
-	public void setTime(int time) {
-		this.time = time;
-	}
-
-	public String getFoodType() {
-		return foodType;
-	}
-
-	public void setFoodType(String foodType) {
-		this.foodType = foodType;
-	}
-
-	public List<String> getInstructions() {
-		return instructions;
-	}
-
-	public void setInstructions(List<String> instructions) {
-		this.instructions = instructions;
-	}
-
-	public List<IngredientDetailDTO> getIngredients() {
-		return ingredients;
-	}
-
-	public void setIngredients(List<IngredientDetailDTO> ingredients) {
-		this.ingredients = ingredients;
-	}
 }
 

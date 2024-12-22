@@ -11,6 +11,13 @@ import java.util.List;
 public class DayRequest {
     private Date date;
     private Long weekId;
-    private List<Long> recipeIds;
+    private List<RecipeWithPortion> recipes;
+
+    @Getter
+    @Setter
+    public static class RecipeWithPortion {
+        private Long recipeId;
+        private int portions;
+    }
 
 }

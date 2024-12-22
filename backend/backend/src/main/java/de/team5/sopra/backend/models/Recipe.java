@@ -3,6 +3,7 @@ package de.team5.sopra.backend.models;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import de.team5.sopra.backend.models.enums.FoodType;
@@ -55,13 +56,14 @@ public class Recipe {
 
 
 
-    @JsonIgnore
-    @ManyToMany(mappedBy = "recipes")
-    private List<Day> days = new ArrayList<>();
+    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("recipe-userSpecificRecipe")
+    private List<UserSpecificRecipe> userSpecificRecipes = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User creator;
+    @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference
+    private User user;
 
     public Recipe(){}
 
@@ -81,5 +83,12 @@ public class Recipe {
     public void removeIngredient(Ingredient ingredient) {
         this.ingredients.remove(ingredient);
         ingredient.setRecipe(null);
+    }
+
+    public void setFoodType(FoodType foodtype) {
+        this.foodtype = foodtype;
+    }
+    public FoodType getFoodType() {
+        return foodtype;
     }
 }

@@ -1,12 +1,19 @@
 package de.team5.sopra.backend.controller;
 
+
+import de.team5.sopra.backend.dto.RecipeCreationDTO;
 import de.team5.sopra.backend.dto.RecipeDTO;
 import de.team5.sopra.backend.exception.ForbiddenException;
 import de.team5.sopra.backend.models.Recipe;
 import de.team5.sopra.backend.models.User;
 import de.team5.sopra.backend.service.RecipeService;
 import de.team5.sopra.backend.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import de.team5.sopra.backend.models.Ingredient;
 import org.springframework.security.core.Authentication;
@@ -15,23 +22,25 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
 @RestController
 @RequestMapping("/recipes")
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor_ = {@Autowired})
 public class RecipeController {
 
     private final RecipeService recipeService;
+
     private final UserService userService;
 
+    private static final Logger log = LoggerFactory.getLogger(RecipeController.class);
+
+    /**
+     * GET /recipes : Liste aller Rezepte
+     */
     @GetMapping
-    public ResponseEntity<?> getAllRecipes(@RequestHeader("User-Id") Long userId) {
-        try {
-            User user = userService.getUserById(userId);
-            List<Recipe> recipes = recipeService.getAllRecipesByUser(user);
-            return ResponseEntity.ok(recipes);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
-        }
+    public List<Recipe> getAllRecipes() {
+        User currentUser = getCurrentUser();
+        return recipeService.getAllRecipesByUser(currentUser);
     }
 
     /**
@@ -47,15 +56,16 @@ public class RecipeController {
      * Erwartet im RequestBody ein JSON, das auch "ingredients" als Array von Ingredient-Objekten enthält.
      */
     @PostMapping
-    public ResponseEntity<?> createRecipe(@RequestHeader("User-Id") Long userId,
-                                          @RequestBody Recipe recipe) {
+    public ResponseEntity<RecipeDTO> createRecipe(@Valid @RequestBody Recipe recipeRequest) {
         try {
-            User user = userService.getUserById(userId);
-            recipe.setCreator(user);
-            Recipe created = recipeService.createRecipe(recipe);
-            return ResponseEntity.ok(created);
+            User currentUser = getCurrentUser();
+            recipeRequest.setUser(currentUser);
+            Recipe createdRecipe = recipeService.createRecipe(recipeRequest);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(RecipeDTO.fromRecipe(createdRecipe));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            log.error("Error creating recipe", e);
+            throw e;
         }
     }
 
@@ -75,7 +85,7 @@ public class RecipeController {
         User currentUser = getCurrentUser();
         Recipe recipe = recipeService.getRecipeById(id);
 
-        if (!recipe.getCreator().equals(currentUser)) {
+        if (!recipe.getUser().equals(currentUser)) {
             throw new ForbiddenException("You can only delete your own recipes");
         }
 
@@ -111,10 +121,29 @@ public class RecipeController {
         return recipeService.getInstructions(id);
     }
 
-    private User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        return userService.getUserByUsername(username);
+//    private User getCurrentUser() {
+//        return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+//    }
+private User getCurrentUser() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication == null || !authentication.isAuthenticated() ||
+            "anonymousUser".equals(authentication.getPrincipal())) {
+        throw new IllegalStateException("No authenticated user found");
     }
+
+
+    if (authentication.getPrincipal() instanceof String) {
+        String username = (String) authentication.getPrincipal();
+        return userService.getUserByUsername(username); // Use userService here
+    }
+
+    // Check if the Principal is a UserDetails implementation
+    if (authentication.getPrincipal() instanceof org.springframework.security.core.userdetails.User) {
+        String username = ((org.springframework.security.core.userdetails.User) authentication.getPrincipal()).getUsername();
+        return userService.getUserByUsername(username); // Use userService here
+    }
+
+    throw new IllegalStateException("Unexpected Principal type: " + authentication.getPrincipal().getClass().getName());
+}
 
 }

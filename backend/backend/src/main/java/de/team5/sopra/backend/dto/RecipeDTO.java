@@ -21,9 +21,9 @@ public class RecipeDTO {
         dto.setId(recipe.getId());
         dto.setName(recipe.getName());
         dto.setTime(recipe.getTime());
-        dto.setFoodtype(recipe.getFoodtype());
+        dto.setFoodtype(recipe.getFoodType());
         dto.setIngredients(recipe.getIngredients());
-        dto.setCreatorId(recipe.getCreator().getId());
+        dto.setCreatorId(recipe.getUser().getId());
         return dto;
     }
 }

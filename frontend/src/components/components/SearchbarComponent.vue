@@ -14,48 +14,9 @@
 <script setup>
 import { ref } from 'vue';
 import { mockRecipes } from '../../classes/MockRecipe.js';
-import { fetchRecipes } from '../../classes/ApiController.js';
 
 const searchQuery = ref('');
 const emit = defineEmits(['update:filtered-recipes']);
-
-/*
-const props = defineProps({
-  dietFilter: {
-    type: String,
-    required: false,
-    default: null,
-  },
-});
-*/
-
-// Commented out the startSearch function because the extern api will eventually not be used in the final web app
-
-/*
-async function startSearch() {
-  if (searchQuery.value.trim()) {
-    try {
-      // API query for real recipes
-      const filteredRecipes = await fetchRecipes(searchQuery.value);
-      console.log("Rezepte von API:", filteredRecipes);
-
-      // Uses the Mockrecipes if the Api does not have a response
-      if (filteredRecipes.length === 0) {
-        console.warn("Keine API-Ergebnisse gefunden. Verwende Mockrezepte.");
-        emit("update:filteredRecipes", mockRecipes.filter(mockRecipeFilter));
-      } else {
-        emit("update:filteredRecipes", filteredRecipes);
-      }
-    } catch (error) {
-      console.error("Fehler beim Abrufen der Rezepte. Verwende Mockrezepte:", error);
-      emit("update:filteredRecipes", mockRecipes.filter(mockRecipeFilter));
-    }
-  } else {
-    console.log("Keine Suchanfrage. Zeige alle Mockrezepte.");
-    emit("update:filteredRecipes", mockRecipes);
-  }
-}
-*/
 
 async function startSearch() {
   if (searchQuery.value.trim()) {

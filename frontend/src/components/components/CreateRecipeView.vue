@@ -53,7 +53,6 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import axios from '@/axios'
-import { getUserId } from '@/storage/userStorage'
 
 const showModal = ref(false)
 const errorMessage = ref('')

@@ -8,7 +8,7 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
-import {isAuthenticated, clearUserId} from '@/storage/userStorage.js'
+import {isAuthenticated, clearUserId} from '@/storage/localStorageManagement.js'
 const router = useRouter()
 
 const navigateToLogin = () => {

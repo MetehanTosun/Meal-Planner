@@ -19,7 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @RequestMapping("/days")
 public class DayController {
-    
+
     @Autowired
     private DayService dayService;
 
@@ -29,17 +29,18 @@ public class DayController {
      */
     @GetMapping
     public List<Day> getAllDays(){
-        return dayService.getAllDays();
+        List<Day> days = dayService.getAllDays();
+        days.forEach(System.out::println);
+        return days;
     }
 
     @GetMapping("/{id}")
     public Day getDayById(@PathVariable("id") Long id){
-        Day day = dayService.getDayById(id);
-        return day;
+        return dayService.getDayById(id);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delteDay(@PathVariable("id") Long id){
+    public ResponseEntity<?> deleteDay(@PathVariable("id") Long id){
         try{
             dayService.deleteDay(id);
             return ResponseEntity.noContent().build();
@@ -88,16 +89,23 @@ public class DayController {
         }
     }
 
-    // TODO: ADD THIS POST-Mapping
-//    @PostMapping("/days/add-recipe")
-//    public ResponseEntity<Day> addRecipeToDayWithIdAndPortion(@RequestBody @Valid AddRecipeToDayRequest request) {
-//        try {
-//            Day updatedDay = dayService.addRecipeToDayWithIdAndPortion(request);
-//            return ResponseEntity.ok(updatedDay);
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.badRequest().body(null);
-//        }
-//    }
+    // NEW FEATURE
+
+    @PostMapping("/{dayId}/add-recipe")
+    public ResponseEntity<Day> addRecipeToDayWithPortions(
+            @PathVariable Long dayId,
+            @RequestBody @Valid AddRecipeToDayRequest request) {
+        try {
+            Day updatedDay = dayService.addRecipeToDayWithPortions(dayId, request.getRecipeId(), request.getPortions());
+            return ResponseEntity.ok(updatedDay);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
 
 
 }

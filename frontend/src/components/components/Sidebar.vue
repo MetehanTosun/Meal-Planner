@@ -43,7 +43,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '@/axios'
-import { getUserId } from '@/storage/userStorage'
+import { getUserId } from '@/storage/localStorageManagement.js'
 import SearchbarComponent from './SearchbarComponent.vue'
 import CreateRecipeView from './CreateRecipeView.vue'
 
@@ -128,7 +128,6 @@ const handleRecipeCreated = () => {
   fetchRecipes();
 };
 
-// Initial load
 onMounted(() => {
   fetchRecipes();
 });

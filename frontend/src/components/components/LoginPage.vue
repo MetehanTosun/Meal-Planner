@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '@/axios'
-import { setUserId } from '@/storage/userStorage.js'
+import { setUserId } from '@/storage/localStorageManagement.js'
 
 const router = useRouter()
 const username = ref('')
