@@ -1,15 +1,17 @@
 package de.team5.sopra.backend.service;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import de.team5.sopra.backend.dto.AddRecipeToDayRequest;
+import de.team5.sopra.backend.dto.DayDTO;
 import de.team5.sopra.backend.dto.DayRequest;
+import de.team5.sopra.backend.dto.RecipeDTO;
 import de.team5.sopra.backend.models.UserSpecificRecipe;
 import de.team5.sopra.backend.models.Week;
 import de.team5.sopra.backend.repository.RecipeRepository;
 import de.team5.sopra.backend.repository.WeekRepository;
 import de.team5.sopra.backend.repository.general.UserSpecificRecipeRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -63,32 +65,47 @@ public class DayService {
         }
     }
 
-    public Day addRecipeToDay(Long id, Recipe recipe){
-        Optional<Day> dayOptionalObject = dayRepository.findById(id);
-        if(dayOptionalObject.isPresent()){
-            Day day = dayOptionalObject.get();
-            List<Recipe> dayRecipeList = day.getRecipes();
-            dayRecipeList.add(recipe);
-            return dayRepository.save(day);
-        } else{
-            throw new EntityNotFoundException("No day with the ID: "+id+" exists.");
+    @Transactional
+    public DayDTO addRecipeToDay(Long dayId, RecipeDTO recipeDTO) {
+        Day day = dayRepository.findById(dayId)
+                .orElseThrow(() -> new EntityNotFoundException("No day with the ID: " + dayId + " exists."));
+
+        Recipe recipe;
+        if (recipeDTO.getId() != null) {
+            recipe = recipeRepository.findById(recipeDTO.getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Recipe not found: " + recipeDTO.getId()));
+        } else {
+            recipe = new Recipe();
+            recipe.setName(recipeDTO.getName());
+            recipe.setTime(recipeDTO.getTime());
+            recipe.setFoodtype(recipeDTO.getFoodtype());
+            // Weitere Felder setzen
+            recipe = recipeRepository.save(recipe);
         }
+
+        if (!day.getRecipes().contains(recipe)) {
+            day.getRecipes().add(recipe);
+        }
+
+        Day savedDay = dayRepository.save(day);
+        return DayDTO.fromDay(savedDay);
     }
 
-    public void removeRecipeFromDay(Long dayId, Long recipeId) {
+
+    @Transactional
+    public DayDTO removeRecipeFromDay(Long dayId, Long recipeId) {
         Day day = dayRepository.findById(dayId)
-                .orElseThrow(() -> new EntityNotFoundException("Day not found with id: " + dayId));
+                .orElseThrow(() -> new EntityNotFoundException("Day not found: " + dayId));
 
         Recipe recipe = recipeRepository.findById(recipeId)
-                .orElseThrow(() -> new EntityNotFoundException("Recipe not found with id: " + recipeId));
+                .orElseThrow(() -> new EntityNotFoundException("Recipe not found: " + recipeId));
 
-        if (day.getRecipes().contains(recipe)) {
-            day.getRecipes().remove(recipe);
-            dayRepository.save(day);
-        } else {
-            throw new IllegalArgumentException("Recipe is not assigned to the specified day.");
-        }
+        day.getRecipes().remove(recipe);
+        Day updatedDay = dayRepository.save(day);
+
+        return DayDTO.fromDay(updatedDay);
     }
+
     public Day createDay(DayRequest dayRequest) {
         Day day = new Day();
         day.setDate(dayRequest.getDate());

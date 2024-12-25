@@ -5,7 +5,9 @@ import de.team5.sopra.backend.models.Recipe;
 import de.team5.sopra.backend.models.enums.FoodType;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 public class RecipeDTO {
@@ -13,8 +15,7 @@ public class RecipeDTO {
     private String name;
     private int time;
     private FoodType foodtype;
-    private List<Ingredient> ingredients;
-    private Long creatorId;
+    private List<IngredientDetailDTO> ingredients;  // Hier ändern wir von List<Ingredient> zu List<IngredientDetailDTO>
 
     public static RecipeDTO fromRecipe(Recipe recipe) {
         RecipeDTO dto = new RecipeDTO();
@@ -22,8 +23,20 @@ public class RecipeDTO {
         dto.setName(recipe.getName());
         dto.setTime(recipe.getTime());
         dto.setFoodtype(recipe.getFoodtype());
-        dto.setIngredients(recipe.getIngredients());
-        dto.setCreatorId(recipe.getCreator().getId());
+
+        // Konvertierung der Ingredients zu DTOs
+        List<IngredientDetailDTO> ingredientDTOs = new ArrayList<>();
+        List<Ingredient> ingredients = recipe.getIngredients();
+
+        for (Ingredient ingredient : ingredients) {
+            IngredientDetailDTO ingredientDTO = new IngredientDetailDTO();
+            ingredientDTO.setName(ingredient.getName());
+            ingredientDTO.setAmount(ingredient.getAmount());
+            ingredientDTO.setUnit(ingredient.getUnit().toString());
+            ingredientDTOs.add(ingredientDTO);
+        }
+
+        dto.setIngredients(ingredientDTOs);
         return dto;
     }
 }

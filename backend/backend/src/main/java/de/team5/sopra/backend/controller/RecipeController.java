@@ -1,45 +1,55 @@
 package de.team5.sopra.backend.controller;
 
+
+import de.team5.sopra.backend.dto.IngredientDetailDTO;
 import de.team5.sopra.backend.dto.RecipeDTO;
 import de.team5.sopra.backend.exception.ForbiddenException;
 import de.team5.sopra.backend.models.Recipe;
 import de.team5.sopra.backend.models.User;
 import de.team5.sopra.backend.service.RecipeService;
-import de.team5.sopra.backend.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import de.team5.sopra.backend.models.Ingredient;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
 
 @RestController
 @RequestMapping("/recipes")
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor_ = {@Autowired})
 public class RecipeController {
 
     private final RecipeService recipeService;
-    private final UserService userService;
 
+    private static final Logger log = LoggerFactory.getLogger(RecipeController.class);
+
+    /**
+     * GET /recipes : Liste aller Rezepte
+     */
     @GetMapping
-    public ResponseEntity<?> getAllRecipes(@RequestHeader("User-Id") Long userId) {
-        try {
-            User user = userService.getUserById(userId);
-            List<Recipe> recipes = recipeService.getAllRecipesByUser(user);
-            return ResponseEntity.ok(recipes);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
-        }
+    public List<RecipeDTO> getAllRecipes() {
+        User currentUser = getCurrentUser();
+        return recipeService.getAllRecipesByUser(currentUser).stream()
+                .map(RecipeDTO::fromRecipe)
+                .collect(Collectors.toList());
     }
 
     /**
      * GET /recipes/{id} : Rezept per ID
      */
     @GetMapping("/{id}")
-    public Recipe getRecipeById(@PathVariable Long id) {
-        return recipeService.getRecipeById(id);
+    public RecipeDTO getRecipeById(@PathVariable Long id) {
+        Recipe recipe = recipeService.getRecipeById(id);
+        return RecipeDTO.fromRecipe(recipe);
     }
 
     /**
@@ -47,15 +57,16 @@ public class RecipeController {
      * Erwartet im RequestBody ein JSON, das auch "ingredients" als Array von Ingredient-Objekten enthält.
      */
     @PostMapping
-    public ResponseEntity<?> createRecipe(@RequestHeader("User-Id") Long userId,
-                                          @RequestBody Recipe recipe) {
+    public ResponseEntity<RecipeDTO> createRecipe(@Valid @RequestBody Recipe recipeRequest) {
         try {
-            User user = userService.getUserById(userId);
-            recipe.setCreator(user);
-            Recipe created = recipeService.createRecipe(recipe);
-            return ResponseEntity.ok(created);
+            User currentUser = getCurrentUser();
+            recipeRequest.setCreator(currentUser);
+            Recipe createdRecipe = recipeService.createRecipe(recipeRequest);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(RecipeDTO.fromRecipe(createdRecipe));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            log.error("Error creating recipe", e);
+            throw e;
         }
     }
 
@@ -87,8 +98,19 @@ public class RecipeController {
      * GET /recipes/{id}/ingredients : Zutaten eines Rezepts abrufen
      */
     @GetMapping("/{id}/ingredients")
-    public List<Ingredient> getAllIngredients(@PathVariable Long id) {
-        return recipeService.getAllIngredientsForRecipe(id);
+    public List<IngredientDetailDTO> getAllIngredients(@PathVariable Long id) {
+        List<Ingredient> ingredients = recipeService.getAllIngredientsForRecipe(id);
+        List<IngredientDetailDTO> dtoList = new ArrayList<>();
+
+        for (Ingredient ingredient : ingredients) {
+            IngredientDetailDTO dto = new IngredientDetailDTO();
+            dto.setName(ingredient.getName());
+            dto.setAmount(ingredient.getAmount());
+            dto.setUnit(ingredient.getUnit().toString());
+            dtoList.add(dto);
+        }
+
+        return dtoList;
     }
 
     /**
@@ -112,9 +134,7 @@ public class RecipeController {
     }
 
     private User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        return userService.getUserByUsername(username);
+        return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
 }

@@ -29,19 +29,11 @@
 import { ref, onMounted } from 'vue'
 import axios from '@/axios'
 import { getUserId } from '@/storage/userStorage'
-import { useRouter } from 'vue-router'
+import router from '@/router';
+import { weeklyList } from '@/classes/weeklyList';
 
-const router = useRouter()
+
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-const weeklyList = ref({
-  Monday: [],
-  Tuesday: [],
-  Wednesday: [],
-  Thursday: [],
-  Friday: [],
-  Saturday: [],
-  Sunday: [],
-})
 
 const clearWeeklyList = () => {
   Object.keys(weeklyList.value).forEach(day => {
@@ -80,18 +72,70 @@ const fetchOrCreateWeek = async () => {
   }
 }
 
-const addRecipe = (event, day) => {
-  const recipeData = event.dataTransfer.getData('application/json')
-  if (recipeData) {
-    const recipe = JSON.parse(recipeData)
-    weeklyList.value[day].push(recipe)
-    console.log('Recipe added to ' + day + ':', recipe)
+const getDayId = async (dayName) => {
+  try {
+    const response = await axios.get(`/days/byName/${dayName}`);
+    return response.data.id;
+  } catch (error) {
+    console.error(`Error getting day ID for ${dayName}:`, error);
+    throw error;
   }
-}
+};
 
-const deleteRecipe = (day, index) => {
-  weeklyList.value[day].splice(index, 1)
-}
+const addRecipe = async (event, dayName) => {
+  try {
+    if (!event.dataTransfer || !event.dataTransfer.getData) {
+      console.error("No valid dataTransfer object found in event.");
+      return;
+    }
+
+    const recipeData = event.dataTransfer.getData("application/json");
+    if (!recipeData) {
+      console.error("No recipe data found in event.");
+      return;
+    }
+
+    const recipe = JSON.parse(recipeData);
+    console.log("Recipe to add:", recipe);
+
+    const dayId = await getDayId(dayName);
+    console.log(`Got day ID ${dayId} for ${dayName}`);
+
+    if (!weeklyList.value[dayName]) {
+      console.error(`No list found for day ${dayName}`);
+      return;
+    }
+
+    const response = await axios.post(`/days/${dayId}/add-recipe`, recipe);
+
+    if (response.data) {
+      weeklyList.value[dayName].push(recipe);
+      console.log(`Recipe added to ${dayName} (ID: ${dayId}) on the server.`);
+    }
+  } catch (error) {
+    console.error("Error adding recipe:", error.response?.data || error.message || error);
+  }
+};
+
+const deleteRecipe = async (day, index) => {
+  try {
+    const recipe = weeklyList.value[day][index];
+    if (!recipe || !recipe.id) {
+      console.error('No valid recipe found at index', index);
+      return;
+    }
+
+    const dayId = await getDayId(day);
+    
+    await axios.delete(`/days/${dayId}/remove-recipe/${recipe.id}`);
+    
+    weeklyList.value[day].splice(index, 1);
+    
+    console.log(`Recipe removed from ${day}`);
+  } catch (error) {
+    console.error("Error removing recipe:", error.response?.data || error.message || error);
+  }
+};
 
 onMounted(() => {
   if (!getUserId()) {
