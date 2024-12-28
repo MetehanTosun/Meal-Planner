@@ -8,6 +8,8 @@ import de.team5.sopra.backend.repository.DayRepository;
 import de.team5.sopra.backend.repository.UserRepository;
 import de.team5.sopra.backend.repository.WeekRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -74,7 +76,7 @@ public class WeekService {
 		// TODO: Implement Check
 		Week latestWeek = weekRepository.findTopByUserOrderByStartDateDesc(userRepository.findById(id).get());
 		if (latestWeek == null || isWeekOutdated(latestWeek)) {
-			Week newWeek = createNewWeekForUser(id , new Date());
+			Week newWeek = createNewWeekForUser(id, new Date());
 			return weekRepository.save(newWeek);
 		}
 		return latestWeek;
@@ -115,7 +117,7 @@ public class WeekService {
 	private Date calculateEndDate(Date startDate) {
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(startDate);
-		calendar.add(Calendar.DAY_OF_YEAR, 6); // 7-day total
+		calendar.add(Calendar.DAY_OF_YEAR, 6);
 		return calendar.getTime();
 	}
 
@@ -133,5 +135,48 @@ public class WeekService {
 		dayRepository.save(day);
 
 		return week;
+	}
+
+	@Transactional
+	public List<Week> getWeeksInRange(Long userId, int count) {
+		User user = userRepository.findById(userId)
+				.orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
+
+		Pageable pageable = PageRequest.of(0, count);
+		List<Week> weeks = weekRepository.findByUserOrderByStartDateDesc(user, pageable);
+
+		System.out.println("Fetched weeks: " + weeks);
+
+		Collections.reverse(weeks);
+
+		while (weeks.size() < count) {
+			System.out.println("Adding new week");
+			Week newWeek = createNewWeekBasedOnLast(userId);
+			weeks.add(newWeek);
+		}
+
+		return weeks;
+	}
+
+	@Transactional
+	public Week createNewWeekBasedOnLast(Long userId) {
+		User user = userRepository.findById(userId)
+				.orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
+
+		Week latestWeek = weekRepository.findTopByUserOrderByStartDateDesc(user);
+
+		Date newStartDate;
+		if (latestWeek != null && latestWeek.getEndDate() != null) {
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(latestWeek.getEndDate());
+			calendar.add(Calendar.DAY_OF_YEAR, 1);
+			newStartDate = calendar.getTime();
+		} else {
+			newStartDate = new Date();
+		}
+
+		Week newWeek = createNewWeekForUser(userId, newStartDate);
+
+		return weekRepository.save(newWeek);
 	}
 }

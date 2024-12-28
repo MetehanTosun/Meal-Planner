@@ -2,20 +2,20 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '@/axios'
-import { setUserId } from '@/storage/localStorageManagement.js'
+import { getUserId, setUserId } from '@/storage/localStorageManagement.js'
+import { useWeekStore } from '@/state-management/index.js'
 
 const router = useRouter()
 const username = ref('')
 const password = ref('')
 const errorMessage = ref('')
-
+useWeekStore()
 const sendLogin = async () => {
   try {
-    const response = await axios.post('/auth/login', {
+    return await axios.post('/auth/login', {
       username: username.value,
-      password: password.value
+      password: password.value,
     })
-    return response
   } catch (error) {
     console.error('Login error:', error)
     throw error
@@ -24,25 +24,39 @@ const sendLogin = async () => {
 
 const handleLogin = async () => {
   if (!username.value || !password.value) {
-    errorMessage.value = 'Please fill in both fields.'
-    return
+    errorMessage.value = 'Please fill in both fields.';
+    return;
   }
 
   try {
-    const response = await sendLogin()
+    const response = await sendLogin();
     if (response.data.userId) {
-      setUserId(response.data.userId)
-      router.push('/')
+      console.log('Login successful. Received userId:', response.data.userId);
+      setUserId(response.data.userId); // Save to localStorage
+      await fetchCurrentWeek(getUserId()); // Fetch the current week immediately after login
+      await router.push('/'); // Redirect to home page
     } else {
-      errorMessage.value = 'Login failed. Please check your credentials.'
+      errorMessage.value = 'Login failed. Please check your credentials.';
     }
   } catch (error) {
-    console.error('Login error:', error)
-    errorMessage.value = error.response?.data || 'Login failed. Please try again.'
-    username.value = ''
-    password.value = ''
+    console.error('Login error:', error);
+    errorMessage.value = error.response?.data || 'Login failed. Please try again.';
+    username.value = '';
+    password.value = '';
   }
-}
+};
+async function fetchCurrentWeek() {
+  try {
+    console.log('Fetching current week for userId:', getUserId());
+    const response = await axios.get(`/weeks/current/${getUserId()}`);
+    const weekStore = useWeekStore();
+    weekStore.setWeekData(response.data); // Store week data in Pinia
+    console.log('Current week fetched successfully:', response.data);
+  } catch (error) {
+    console.error('Error fetching current week:', error);
+    throw error;
+  }
+};
 </script>
 
 <template>

@@ -115,7 +115,7 @@ const saveRecipe = async () => {
     const recipeToSend = {
       name: recipe.name,
       time: parseInt(recipe.time),
-      foodtype: recipe.foodType,
+      foodType: recipe.foodType,
       ingredients: recipe.ingredients.map(ingredient => ({
         name: ingredient.name,
         amount: parseInt(ingredient.amount),

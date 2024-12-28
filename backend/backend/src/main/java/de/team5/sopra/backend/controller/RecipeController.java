@@ -38,8 +38,8 @@ public class RecipeController {
      * GET /recipes : Liste aller Rezepte
      */
     @GetMapping
-    public List<Recipe> getAllRecipes() {
-        User currentUser = getCurrentUser();
+    public List<Recipe> getAllRecipes(@RequestHeader("User-Id") Long userId) {
+        User currentUser = userService.getUserById(userId);
         return recipeService.getAllRecipesByUser(currentUser);
     }
 
@@ -56,9 +56,9 @@ public class RecipeController {
      * Erwartet im RequestBody ein JSON, das auch "ingredients" als Array von Ingredient-Objekten enthält.
      */
     @PostMapping
-    public ResponseEntity<RecipeDTO> createRecipe(@Valid @RequestBody Recipe recipeRequest) {
+    public ResponseEntity<RecipeDTO> createRecipe(@RequestHeader("User-Id") Long userId, @Valid @RequestBody Recipe recipeRequest) {
         try {
-            User currentUser = getCurrentUser();
+            User currentUser = userService.getUserById(userId);
             recipeRequest.setUser(currentUser);
             Recipe createdRecipe = recipeService.createRecipe(recipeRequest);
             return ResponseEntity.status(HttpStatus.CREATED)
@@ -122,7 +122,7 @@ public class RecipeController {
     }
 
 //    private User getCurrentUser() {
-//        return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+//       return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 //    }
 private User getCurrentUser() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

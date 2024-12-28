@@ -82,4 +82,15 @@ public class WeekController {
 		}
 
 	}
+
+	@GetMapping("/range/{userId}")
+	public ResponseEntity<List<Week>> getWeeksInRange(@PathVariable Long userId, @RequestParam int count) {
+		try {
+			List<Week> weeks = weekService.getWeeksInRange(userId, count);
+			return ResponseEntity.ok(weeks);
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.badRequest().body(null);
+		}
+	}
+
 }

@@ -1,238 +1,383 @@
 <template>
   <div class="day-container">
+    <div class="interactive-container">
+      <button
+        class="custom-arrow-button left"
+        aria-label="Previous week"
+        @click="weekStore.goToPreviousWeek"
+      >
+        &#9664; <!-- Left arrow symbol -->
+      </button>
+      <div class="menu-bar">
+        <!-- Your menu items -->
+      </div>
+      <button
+        class="custom-arrow-button right"
+        aria-label="Next week"
+        @click="weekStore.goToNextWeek"
+      >
+        &#9654; <!-- Right arrow symbol -->
+      </button>
+    </div>
     <div class="menu-bar">
-      <div class="menu-item" v-for="(day, index) in days" :key="index">
-        <p class="item-label">{{ day }}</p>
+      <div
+        class="menu-item"
+        v-for="day in weekStore.days"
+        :key="day.id"
+      >
+        <p class="item-label">
+          {{ new Date(day.date).toLocaleDateString('de-DE', { weekday: 'long' }) }}
+        </p>
+        <p class="date-label">
+          {{ new Date(day.date).toLocaleDateString('de-DE') }}
+        </p>
         <div
           class="drop-zone"
           :dropzone="true"
-          :day="day"
+          :day="day.id"
           @dragover.prevent
-          @drop.prevent
-          @drop="addRecipe($event, day)"
+          @drop.prevent="handleDrop($event, day.id)"
         >
           <ul class="recipe-day-list">
-            <li v-for="(recipe, index) in weeklyList[day]" :key="index">
-              <p>{{ recipe.name }}</p>
-              <button @click="deleteRecipe(day, index)" class="delete-recipe-button">
-                x
-              </button>
+            <li
+              v-for="(userSpecificRecipe) in day.userSpecificRecipes"
+              :key="userSpecificRecipe.id"
+            >
+              <p>{{ userSpecificRecipe.recipeData.name || 'Recipe Placeholder' }}</p>
+              <div class="action-buttons">
+                <span class="portionsDisplay" @click="decrementPortions(userSpecificRecipe)">{{ userSpecificRecipe.portions }}</span>
+                <button class="informationTab" @click="toggleTab(userSpecificRecipe)">
+                  <p>ℹ</p>
+                </button>
+                <div v-if="selectedRecipe === userSpecificRecipe" class="overlay" @click="closeTab">
+                  <div @click.stop class="informationDisplay">
+                    <h3>Recipe Information</h3>
+                    <p><b>Name:</b> {{ selectedRecipe.recipeData.name }}</p>
+                    <p><b>Minutes:</b> {{ selectedRecipe.recipeData.time }}</p>
+                    <p><b>Foodtype:</b> {{ selectedRecipe.recipeData.foodtype }}</p>
+                    <div>
+                      <h4>Ingredients:</h4>
+                      <p
+                        v-for="(ingredient, index) in selectedRecipe.recipeData.ingredients"
+                        :key="index"
+                      >
+                        <b>{{ ingredient.name }}</b> - {{ ingredient.amount }}{{ ingredient.unit }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  @click="removeRecipe(day.id, userSpecificRecipe.recipeData.id)"
+                  class="delete-recipe-button"
+                >
+                  x
+                </button>
+              </div>
             </li>
           </ul>
         </div>
       </div>
     </div>
+    <ReactiveDashboard/>
   </div>
 </template>
 
+
+
 <script setup>
-import { ref, onMounted } from 'vue'
-import axios from '@/axios'
-import { getUserId } from '@/storage/localStorageManagement.js'
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue';
+import { useWeekStore } from '@/state-management/index.js';
+import ReactiveDashboard from '@/components/components/ReactiveDashboard.vue'
 
-const router = useRouter()
-const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-const weeklyList = ref({
-  Monday: [],
-  Tuesday: [],
-  Wednesday: [],
-  Thursday: [],
-  Friday: [],
-  Saturday: [],
-  Sunday: [],
-})
+const weekStore = useWeekStore();
+const selectedRecipe = ref(null);
 
-const clearWeeklyList = () => {
-  Object.keys(weeklyList.value).forEach(day => {
-    weeklyList.value[day] = []
-  })
-}
+const toggleTab = (recipe) => {
+  if (selectedRecipe.value === recipe) {
+    selectedRecipe.value = null;
+  } else {
+    selectedRecipe.value = recipe;
+  }
+};
 
-const fetchOrCreateWeek = async () => {
+const closeTab = () => {
+  selectedRecipe.value = null;
+};
+
+const handleDrop = async (event, dayId) => {
+  const recipeData = event.dataTransfer.getData('application/json');
+  if (recipeData) {
+    const recipe = JSON.parse(recipeData);
+    try {
+      const day = weekStore.days.find((day) => day.id === dayId);
+
+      if (!day) {
+        console.error(`Day with ID ${dayId} not found.`);
+        return;
+      }
+
+      // Check if the recipe already exists in the day's userSpecificRecipes
+      const existingRecipe = day.userSpecificRecipes.find(
+        (userSpecificRecipe) => userSpecificRecipe.recipeData.id === recipe.id
+      );
+
+      if (existingRecipe) {
+        // Call the store action to increment portions
+        await weekStore.incrementRecipePortions(existingRecipe.id);
+        existingRecipe.portions += 1; // Optimistically update local state
+      } else {
+        // Add a new recipe if it doesn't exist
+        await weekStore.addRecipeToDay(dayId, recipe.id, 1);
+      }
+    } catch (error) {
+      console.error('Error adding/updating recipe:', error);
+    }
+  }
+};
+
+const removeRecipe = async (dayId, recipeId) => {
   try {
-    const userId = getUserId()
-    if (!userId) {
-      router.push('/login')
-      return
+    const day = weekStore.days.find((day) => day.id === dayId);
+
+    if (!day || !day.userSpecificRecipes) {
+      console.error(`Day or recipe not found: dayId=${dayId}, recipeId=${recipeId}`);
+      return;
     }
 
-    console.log('Fetching week for user:', userId)
-    const response = await axios.get(`/weeks/current/${userId}`)
-    const weekData = response.data
+    const recipeIndex = day.userSpecificRecipes.findIndex(
+      (recipe) => recipe.recipeData.id === recipeId
+    );
 
-    console.log('Received week data:', weekData)
-    clearWeeklyList()
+    if (recipeIndex === -1) {
+      console.error(`Recipe with id ${recipeId} not found in day with ID ${dayId}`);
+      return;
+    }
 
-    if (weekData.days) {
-      weekData.days.forEach((day) => {
-        if (day.date) {
-          const date = new Date(day.date)
-          const dayName = date.toLocaleDateString('en-US', { weekday: 'long' })
-          if (weeklyList.value[dayName]) {
-            weeklyList.value[dayName] = day.recipes || []
-          }
-        }
-      })
+    console.log(`Removing recipe with ID ${recipeId} from day ID: ${dayId}`);
+
+    await weekStore.removeRecipeFromDay(dayId, recipeId);
+    day.userSpecificRecipes.splice(recipeIndex, 1);
+  } catch (error) {
+    console.error('Error removing recipe:', error);
+  }
+};
+const decrementPortions = async (userSpecificRecipe) => {
+  try {
+    console.log('Decrement Portions');
+    await weekStore.decrementRecipePortions(userSpecificRecipe.id);
+
+    if (userSpecificRecipe.portions > 1) {
+      userSpecificRecipe.portions -= 1;
     }
   } catch (error) {
-    console.error('Error fetching week:', error)
+    console.error('Error decrementing portions:', error);
   }
-}
-
-const addRecipe = (event, day) => {
-  const recipeData = event.dataTransfer.getData('application/json')
-  if (recipeData) {
-    const recipe = JSON.parse(recipeData)
-    weeklyList.value[day].push(recipe)
-    console.log('Recipe added to ' + day + ':', recipe)
-  }
-}
-
-const deleteRecipe = (day, index) => {
-  weeklyList.value[day].splice(index, 1)
-}
+};
 
 onMounted(() => {
-  if (!getUserId()) {
-    router.push('/login')
-    return
-  }
-  fetchOrCreateWeek()
-})
+  weekStore.fetchCurrentWeek();
+});
 </script>
+
+
 
 <style>
 .day-container {
-  padding: 20px 20px 20px 20px;
-  background-color: #181818;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  height: 100vh;
-  width: 100vw;
-}
-
-.menu-bar {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  gap: 15px;
-  justify-content: space-between;
-}
-
-.drop-zone {
-  display: flex;
-  align-content: center;
-  flex: 1;
-  width: 100%;
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-  margin-top: 10px;
-  overflow-y: auto;
-}
-
-.menu-item {
-  flex-grow: 1;
-  flex-grow: 0;
-  min-width: 155px;
-  padding: 5px 5px 5px 5px;
-  border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: bold;
-  font-size: 18px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-  transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
-  position: relative;
-  height: 500px;
-}
-
-.menu-item:nth-child(1) {
-  background-color: #1e90ff;
-}
-
-.menu-item:nth-child(2) {
-  background-color: #87ceeb;
-}
-
-.menu-item:nth-child(3) {
-  background-color: #8a2be2;
-}
-
-.menu-item:nth-child(4) {
-  background-color: #7d3c98;
-}
-
-.menu-item:nth-child(5) {
-  background-color: #4b0082;
-}
-
-.menu-item:nth-child(6) {
-  background-color: #40e0d0;
-}
-
-.menu-item:nth-child(7) {
-  background-color: #6a5acd;
-}
-
-.menu-item:hover {
-  transform: scale(1.05);
-  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.4);
-}
-
-.menu-item p {
-  margin: 0;
-}
-
-.recipe-day-list {
-  padding: 5px 4%;
   height: 100%;
   width: 100%;
-  flex: display;
-  align-content: top;
-  justify-content: center;
-  list-style-type: none;
+  box-sizing: border-box;
 }
-
-.recipe-day-list li {
-  font-size: 14px;
-  margin: 4px 0;
-  padding: 4px 4px;
-  cursor: pointer;
-  color: white;
-  background-color: rgba(0, 0, 0, 0.3);
-  border-radius: 6px;
-  text-align: center;
-  transition:
-    background-color 0.3s ease,
-    transform 0.2s ease;
+.date-label{
+  border-bottom: 1px solid #fff;
 }
-
-.recipe-day-list li:hover {
-  background-color: rgba(0, 0, 0, 0.4);
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-.delete-recipe-button {
-  background-color: rgb(238, 29, 29);
-  color: white;
-  border: none;
-  cursor: pointer;
-  border-radius: 4px;
-  font-size: 12px;
+.interactive-container {
+  height: 5%;
   width: 100%;
-  height: 10px;
-  padding: 0;
-  line-height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+}
+.menu-bar {
+  max-height: 80%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  color: white;
+}
+.menu-item{
+  padding: 0.5rem;
+  border: 1px solid white;
+  border-radius: 8px;
+  width: 12%;
+  background-color: #1f1f1f;
+  overflow: hidden;
+}
+.drop-zone {
+  height: 95%;
+  overflow-y: auto;
+}
+.recipe-day-list {
+  list-style: none;
+  padding-top: 1rem;
+  padding-left: 0;
+  margin: 0;
+}
+.recipe-day-list li{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #333;
+  color: white;
+  border-radius: 4px;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  position: relative;
+  transition: background-color 0.3s ease;
+}
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem; /* Adjust spacing between buttons */
+}
+.informationTab {
+  background-color: #272727;
+  color: #b0b0b0;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.3s ease;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.5),
+  inset -1px -1px 2px rgba(255, 255, 255, 0.08);
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+.informationTab:hover {
+  background-color: #2e7dcc;
+  box-shadow: inset 2px 2px 3px rgba(5, 159, 255, 0.9),
+  inset -2px -2px 3px rgba(41, 152, 193, 0.4);
+  color: #fff;
+}
+.delete-recipe-button {
+  background-color: #272727;
+  color: #b0b0b0;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.5),
+  inset -1px -1px 2px rgba(255, 255, 255, 0.08);
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+.delete-recipe-button:hover {
+  background-color: #191919;
+  box-shadow: inset 2px 2px 3px rgba(0, 0, 0, 0.4),
+  inset -2px -2px 3px rgba(30, 30, 30, 0.1);
+}
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+.informationDisplay {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(90, 90, 90, 0.9);
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  width: 300px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  opacity: 0.95;
+}
+.portionsDisplay {
+  background-color: #272727;
+  color: #b0b0b0;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.5),
+  inset -1px -1px 2px rgba(255, 255, 255, 0.08);
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+.portionsDisplay:hover {
+  background-color: #cc2e2e;
+  box-shadow: inset 2px 2px 3px rgba(255, 5, 5, 0.9),
+  inset -2px -2px 3px rgba(193, 41, 41, 0.4);
+  color: #fff;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+.custom-arrow-button {
+  background-color: white; /* Dark background */
+  color: #1f1f1f; /* White arrow */
+  border: none; /* No border */
+  border-radius: 50%; /* Circular button */
+  width: 40px; /* Button size */
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer; /* Pointer on hover */
+  font-size: 1.2rem; /* Arrow size */
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.custom-arrow-button:hover {
+  background-color: #1f1f1f; /* Light background on hover */
+  color: white; /* Dark arrow */
+  transform: scale(1.1); /* Slight zoom effect */
+}
+
+.custom-arrow-button.left {
+  margin-right: auto; /* Position on the left */
+}
+
+.custom-arrow-button.right {
+  margin-left: auto; /* Position on the right */
 }
 </style>

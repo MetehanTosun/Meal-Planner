@@ -11,7 +11,7 @@ public class AddRecipeToDayRequest {
 	@NotNull
 	private Long recipeId;
 
-	@NotNull
+	@NotNull(message = "Warning the day id in recipe request is null!")
 	private Long dayId;
 
 	@Min(1)

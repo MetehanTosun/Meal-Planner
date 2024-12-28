@@ -5,6 +5,7 @@ import java.util.List;
 
 import de.team5.sopra.backend.dto.AddRecipeToDayRequest;
 import de.team5.sopra.backend.dto.DayRequest;
+import de.team5.sopra.backend.dto.UserSpecificRecipeDTO;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +60,8 @@ public class DayController {
             return ResponseEntity.ok("Recipe successfully removed from the day.");
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred.");
         }
@@ -91,12 +94,11 @@ public class DayController {
 
     // NEW FEATURE
 
-    @PostMapping("/{dayId}/add-recipe")
-    public ResponseEntity<Day> addRecipeToDayWithPortions(
-            @PathVariable Long dayId,
-            @RequestBody @Valid AddRecipeToDayRequest request) {
+    @PostMapping("/add-recipe")
+    public ResponseEntity<Day> addRecipeToDayWithPortions(@RequestBody @Valid AddRecipeToDayRequest request) {
+        System.out.println("The day id is: " + request.getDayId());
         try {
-            Day updatedDay = dayService.addRecipeToDayWithPortions(dayId, request.getRecipeId(), request.getPortions());
+            Day updatedDay = dayService.addRecipeToDayWithPortions(request.getDayId(), request.getRecipeId(), request.getPortions());
             return ResponseEntity.ok(updatedDay);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
@@ -105,6 +107,11 @@ public class DayController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
+    }
+
+    @GetMapping("/{dayId}/recipes")
+    public List<UserSpecificRecipeDTO> getUserSpecificRecipes(@PathVariable Long dayId) {
+        return dayService.getUserSpecificRecipesForDay(dayId);
     }
 
 

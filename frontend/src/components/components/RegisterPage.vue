@@ -2,10 +2,12 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '@/axios'
+import { useWeekStore } from '@/state-management/index.js'
 
 const router = useRouter()
 const username = ref('')
 const password = ref('')
+
 
 const sendNewUser = async () => {
   console.log('Attempt Registration: ', {
@@ -31,8 +33,13 @@ const handleRegister = async () => {
 
     if (response.status === 200) {
       alert('Dein Account wurde erstellt!')
-      router.push('/login')
+
+      const weekStore = useWeekStore();
+      await weekStore.createDefaultWeek(response.data.userId);
+
+      await router.push('/login')
     }
+
   } catch (err) {
     console.error('Failed to Register:', err.response?.data || err)
     alert(err.response?.data?.message || 'Registrierung fehlgeschlagen!')

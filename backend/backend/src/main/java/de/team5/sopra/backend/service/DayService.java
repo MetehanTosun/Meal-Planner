@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import de.team5.sopra.backend.dto.AddRecipeToDayRequest;
 import de.team5.sopra.backend.dto.DayRequest;
+import de.team5.sopra.backend.dto.UserSpecificRecipeDTO;
 import de.team5.sopra.backend.models.UserSpecificRecipe;
 import de.team5.sopra.backend.models.Week;
 import de.team5.sopra.backend.repository.RecipeRepository;
@@ -82,20 +84,38 @@ public class DayService {
 	}
 
 	public void removeRecipeFromDay(Long dayId, Long recipeId) {
+		// Fetch the day
 		Day day = dayRepository.findById(dayId)
 				.orElseThrow(() -> new EntityNotFoundException("Day not found with id: " + dayId));
 
-		Optional<UserSpecificRecipe> userSpecificRecipe = day.getUserSpecificRecipes().stream()
-				.filter(usr -> usr.getRecipe().getId() == (recipeId))
-				.findFirst();
-
-		if (userSpecificRecipe.isPresent()) {
-			day.getUserSpecificRecipes().remove(userSpecificRecipe.get());
-			userSpecificRecipeRepository.delete(userSpecificRecipe.get());
-			dayRepository.save(day);
-		} else {
-			throw new IllegalArgumentException("Recipe is not assigned to the specified day.");
+		System.out.println("Fetched day: " + day.getId());
+		System.out.println("UserSpecificRecipe id: " + recipeId);
+		for(UserSpecificRecipe userSpecificRecipe : day.getUserSpecificRecipes()) {
+			System.out.println(userSpecificRecipe.getDay().getId());
 		}
+
+		List<UserSpecificRecipe> matchingRecipes = new ArrayList<>();
+		for (UserSpecificRecipe userSpecificRecipe : day.getUserSpecificRecipes()) {
+			System.out.println("Checking UserSpecificRecipe with Recipe ID: " + userSpecificRecipe.getRecipe().getId());
+			if (userSpecificRecipe.getRecipe().getId() == recipeId) { // Primitive comparison
+				matchingRecipes.add(userSpecificRecipe);
+			}
+		}
+
+		if (matchingRecipes.isEmpty()) {
+			throw new IllegalArgumentException("Recipe with ID " + recipeId + " is not assigned to the day with ID " + dayId);
+		}
+
+		System.out.println("Found matching UserSpecificRecipes: " + matchingRecipes);
+
+		// Remove all matching recipes
+		day.getUserSpecificRecipes().removeAll(matchingRecipes);
+
+		// Delete each matching recipe from the repository
+		matchingRecipes.forEach(userSpecificRecipeRepository::delete);
+
+		// Save the updated day
+		dayRepository.save(day);
 	}
 
 	@Transactional
@@ -189,5 +209,13 @@ public class DayService {
 		}
 
 		return dayRepository.save(day);
+	}
+
+	public List<UserSpecificRecipeDTO> getUserSpecificRecipesForDay(Long dayId) {
+		Day day = dayRepository.findById(dayId)
+				.orElseThrow(() -> new EntityNotFoundException("Day not found with id: " + dayId));
+		return day.getUserSpecificRecipes().stream()
+				.map(UserSpecificRecipeDTO::new)
+				.collect(Collectors.toList());
 	}
 }
