@@ -13,7 +13,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { mockRecipes } from '../../classes/MockRecipe.js';
+import { mockRecipes } from '@/classes/MockRecipe.js';
 
 const searchQuery = ref('');
 const emit = defineEmits(['update:filtered-recipes']);

@@ -1,142 +1,277 @@
+// src/state-management/weekStore.js
+
 import { defineStore } from 'pinia';
 import axios from '@/axios';
-import { getUserId } from '@/storage/localStorageManagement.js'
+import { getUserId } from '@/storage/localStorageManagement.js';
+import router from '@/router'; // Ensure router is correctly imported
+
+function isDayPast(dayDate) {
+  const today = new Date();
+  const dateToCheck = new Date(dayDate);
+
+  // Normalize the dates to remove the time portion for accurate comparison
+  today.setHours(0, 0, 0, 0);
+  dateToCheck.setHours(0, 0, 0, 0);
+
+  return dateToCheck < today;
+}
 
 export const useWeekStore = defineStore('week', {
   state: () => ({
-    currentWeek: null, // The current week's data
-    days: [],          // The days associated with the current week
+    weeks: [], // All fetched weeks
+    currentWeekIndex: 0, // Index of the currently displayed week
   }),
   actions: {
     /**
-     * Set the current week data and update the days array.
-     * @param {Object} week - Week data object from the backend.
+     * Fetch weeks in a range and set the current week.
+     * @param {number} count - Number of weeks to fetch.
      */
-    setWeekData(week) {
-      if (!week) {
-        console.error('setWeekData: Invalid week data:', week);
-        return;
-      }
+    async fetchWeeksInRange(count = 2) {
+      try {
+        console.log('--- Fetching Weeks in Range ---');
+        console.log(`Current Week Index Before Fetch: ${this.currentWeekIndex}`);
+        console.log(`Requested Count: ${count}`);
 
-      this.currentWeek = week;
-      this.days = week.days || []; // Ensure days is always an array
-      console.log('Week data updated:', this.currentWeek);
-    },
-    async fetchCurrentWeek() {
-      try {
-        console.log('Fetching current week...');
-        console.log('userId ', getUserId());
-        const response = await axios.get(`/weeks/current/${getUserId()}`);
-        this.currentWeek = response.data;
-        this.days = response.data.days || []; // Ensure days are always an array
-        console.log('Current week fetched successfully:', this.currentWeek);
+        const response = await axios.get(`/weeks/range/${getUserId()}?count=${count}`);
+        // Map weeks to include isPast flag for each day
+        this.weeks = response.data
+          .map(week => ({
+            ...week,
+            days: week.days.map(day => ({
+              ...day,
+              isPast: isDayPast(day.date),
+            })),
+          }));
+
+        console.log('Fetched Weeks with isPast flags for days:', this.weeks);
+
+        // Maintain currentWeekIndex within bounds
+        if (this.weeks.length > this.currentWeekIndex) {
+          // No change needed
+        } else {
+          this.currentWeekIndex = this.weeks.length - 1; // Fallback to last valid week
+        }
+
+        console.log(`Current Week Index After Fetch: ${this.currentWeekIndex}`);
+        console.log('-------------------------------');
       } catch (error) {
-        console.error('Error fetching current week:', error);
+        console.error('Error fetching weeks in range:', error);
         throw error;
       }
     },
-    async createDefaultWeek(userId) {
-      try {
-        const response = await axios.post(`/weeks/create/user/${userId}`, {
-          startDate: new Date().toISOString(),
-        });
-        console.log('Default week created successfully:', response.data);
-        this.currentWeek = response.data;
-        this.days = response.data.days || []; // Update the store state immediately
-        return response.data;
-      } catch (error) {
-        console.error('Error creating default week:', error);
-        throw error;
+
+    /**
+     * Navigate to the previous week if available.
+     */
+    moveToPreviousWeek() {
+      if (this.currentWeekIndex > 0) {
+        this.currentWeekIndex -= 1;
       }
     },
-    // Add a recipe to a day and re-fetch the week to ensure consistency
+
+    /**
+     * Navigate to the next week if available.
+     */
+    moveToNextWeek() {
+      if (this.currentWeekIndex < this.weeks.length - 1) {
+        this.currentWeekIndex += 1;
+      }
+    },
+
+    /**
+     * Add a recipe to a day.
+     * @param {number} dayId - The ID of the day to which the recipe will be added.
+     * @param {number} recipeId - The ID of the recipe to add.
+     * @param {number} portions - The number of portions for the recipe.
+     */
     async addRecipeToDay(dayId, recipeId, portions) {
       try {
-        console.log('Adding recipe to day:', dayId);
-        console.log('Recipe ID:', recipeId);
-        console.log('Portions:', portions);
+        const currentWeek = this.weeks[this.currentWeekIndex];
+        const day = currentWeek.days.find(d => d.id === dayId);
+
+        if (!day) {
+          console.warn(`Day with ID ${dayId} not found in the current week.`);
+          return;
+        }
+
+        if (day.isPast) {
+          console.warn('Cannot add recipes to a past day.');
+          return;
+        }
+
+        console.log(`Adding recipe ID ${recipeId} to day ID ${dayId} in week index ${this.currentWeekIndex}`);
         await axios.post('/days/add-recipe', {
           dayId: dayId,
           recipeId: recipeId,
           portions: portions,
         });
-        console.log(
-          `Recipe with ID ${recipeId} added to day with ID ${dayId}`
-        );
+        console.log(`Recipe with ID ${recipeId} added to day with ID ${dayId}`);
 
-        // Re-fetch the current week after successfully adding a recipe
-        console.log('Fetching the currentWeek.')
-        if (this.currentWeek) {
-          await this.fetchCurrentWeek();
+        // Update local state without refetching
+        const existingRecipe = day.userSpecificRecipes.find(r => r.recipeData.id === recipeId);
+        const fetchRecipeName = async () => {
+          try {
+            const response = await axios.get(`/recipes/${recipeId}`);
+            return response.data.name;
+          } catch (error) {
+            console.error(`Error fetching recipe name for ID ${recipeId}:`, error);
+            return 'Unknown Recipe'; // Fallback name in case of an error
+          }
+        };
+        const recipeName = await fetchRecipeName();
+        console.log('Recipe Name of to be added recipe:',recipeName);
+        if (existingRecipe) {
+          existingRecipe.portions += portions;
+        } else {
+          const newRecipe = {
+            id: recipeId, // Replace with actual ID from backend response if necessary
+            recipeData: { id: recipeId, name: recipeName }, // Replace with actual data
+            portions,
+          };
+          day.userSpecificRecipes = [...day.userSpecificRecipes, newRecipe]; // Replace the array to trigger reactivity
         }
+
+        console.log(`Updated local state: week index ${this.currentWeekIndex} updated`);
       } catch (error) {
-        console.error(
-          `Error adding recipe with ID ${recipeId} to day with ID ${dayId}:`,
-          error
-        );
+        console.error(`Error adding recipe with ID ${recipeId} to day with ID ${dayId}:`, error);
         throw error;
       }
     },
 
-    // Remove a recipe from a day and re-fetch the week to ensure consistency
+    /**
+     * Remove a recipe from a day.
+     * @param {number} dayId - The ID of the day.
+     * @param {number} recipeId - The ID of the recipe to remove.
+     */
     async removeRecipeFromDay(dayId, recipeId) {
       try {
+        console.log(`Removing recipe with ID ${recipeId} from day with ID ${dayId}`);
         await axios.delete(`/days/${dayId}/recipes/${recipeId}`);
         console.log(`Recipe with ID ${recipeId} removed from day with ID ${dayId}`);
-
-        if (this.currentWeek) {
-          await this.fetchCurrentWeek(this.currentWeek.userId);
-        }
+        await this.fetchWeeksInRange(this.weeks.length); // Refresh weeks to update changes
       } catch (error) {
-        console.error(
-          `Error removing recipe with ID ${recipeId} from day with ID ${dayId}:`,
-          error
-        );
+        console.error(`Error removing recipe with ID ${recipeId} from day with ID ${dayId}:`, error);
         throw error;
       }
     },
+
+    /**
+     * Increment the portions for a recipe.
+     * @param {number} recipeId - The ID of the recipe.
+     */
     async incrementRecipePortions(recipeId) {
       try {
         console.log(`Incrementing portions for recipe ID ${recipeId}`);
         await axios.post(`/user-specific-recipes/${recipeId}/increment-portions`);
         console.log(`Portions incremented for recipe ID ${recipeId}`);
-        if (this.currentWeek) {
-          await this.fetchCurrentWeek(); // Refresh the week data to ensure consistency
-        }
+        await this.fetchWeeksInRange(this.weeks.length); // Refresh weeks to update changes
       } catch (error) {
         console.error(`Error incrementing portions for recipe ID ${recipeId}:`, error);
         throw error;
       }
     },
+
+    /**
+     * Decrement the portions for a recipe.
+     * @param {number} recipeId - The ID of the recipe.
+     */
     async decrementRecipePortions(recipeId) {
       try {
         console.log(`Decrementing portions for recipe ID ${recipeId}`);
         await axios.post(`/user-specific-recipes/${recipeId}/decrement-portions`);
         console.log(`Portions decremented for recipe ID ${recipeId}`);
-        if (this.currentWeek) {
-          await this.fetchCurrentWeek(); // Refresh the week data to ensure consistency
-        }
+        await this.fetchWeeksInRange(this.weeks.length); // Refresh weeks to update changes
       } catch (error) {
         console.error(`Error decrementing portions for recipe ID ${recipeId}:`, error);
         throw error;
       }
     },
-    // Clear the store state
-    clearWeekData() {
-      this.currentWeek = null;
-      this.days = [];
+    async handleWeekTransition() {
+      const today = new Date();
+
+      // Get the end date of the last week in the current range
+      const lastWeek = this.weeks[this.weeks.length - 1];
+      const lastWeekEndDate = new Date(lastWeek.endDate);
+
+      // Check if today is beyond the last week's end date
+      if (today > lastWeekEndDate) {
+        console.log('Current week is outdated. Creating a new week...');
+
+        // Create a new week on the backend
+        const nextWeekStartDate = new Date(lastWeekEndDate);
+        nextWeekStartDate.setDate(nextWeekStartDate.getDate() + 1); // Day after last week's end date
+        const nextWeekEndDate = new Date(nextWeekStartDate);
+        nextWeekEndDate.setDate(nextWeekStartDate.getDate() + 6); // 7 days in a week
+
+        await this.createWeek({
+          userId: getUserId(),
+          startDate: nextWeekStartDate,
+          endDate: nextWeekEndDate,
+          days: [], // Backend should populate days automatically
+        });
+
+        // Fetch updated weeks (next 2 weeks, including the new one)
+        await this.fetchWeeksInRange(2);
+      }
+    },
+
+    async createWeek(weekRequest) {
+      try {
+        const response = await axios.post('/weeks', weekRequest);
+        console.log('New week created:', response.data);
+      } catch (error) {
+        console.error('Error creating week:', error);
+        throw error;
+      }
     },
   },
   getters: {
-    // Get a specific day by its ID
-    getDayById: (state) => (dayId) => {
-      return state.days.find((d) => d.id === dayId);
+    /**
+     * Get all days of the current week.
+     */
+    currentDays(state) {
+      return state.weeks[state.currentWeekIndex]?.days || [];
     },
 
-    // Get all recipes for a specific day by its ID
+    /**
+     * Get all recipes for a specific day by its ID.
+     */
     getRecipesForDay: (state) => (dayId) => {
-      const day = state.days.find((d) => d.id === dayId);
+      const day = state.weeks[state.currentWeekIndex]?.days.find((d) => d.id === dayId);
       return day ? day.userSpecificRecipes || [] : [];
+    },
+    getShoppingList(state) {
+      const days = state.weeks[state.currentWeekIndex]?.days || [];
+
+      // Dictionary, um Zutaten zu aggregieren
+      // Key: 'Zutatsname_Unit', Wert: { name, unit, amount }
+      const aggregated = {};
+
+      days.forEach((day) => {
+        // userSpecificRecipes enthält (id, recipeData, portions, ...)
+        day.userSpecificRecipes?.forEach((usr) => {
+          const { recipeData, portions } = usr;
+          // recipeData enthält laut deiner Models => ingredients: IngredientDTO[]
+          // Jede IngredientDTO hat: name, amount, unit, ...
+          if (!recipeData || !recipeData.ingredients) return;
+
+          recipeData.ingredients.forEach((ingredient) => {
+            const key = ingredient.name + '_' + ingredient.unit;
+            if (!aggregated[key]) {
+              aggregated[key] = {
+                name: ingredient.name,
+                unit: ingredient.unit,
+                amount: 0,
+              };
+            }
+            // amount * portions (z. B. 100 g * 2 Portionen = 200 g)
+            aggregated[key].amount += ingredient.amount * portions;
+          });
+        });
+      });
+
+      // In ein Array umwandeln
+      return Object.values(aggregated);
     },
   },
 });

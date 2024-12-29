@@ -1,24 +1,26 @@
 <script setup>
+import router from '@/router/index.js'
 
+const changeTo = (value) => {
+  if (value === 'planner') {
+    router.push({ name: 'home' })
+  } else if (value === 'statistics') {
+    router.push({ name: 'statistics' })
+  }
+}
 </script>
 
 <template>
   <div class="container">
     <div class="module">
       <ul class="nav">
-        <li class="nav-item">
-          Planner
-        </li>
-        <li class="nav-item">
-          Statistics
-        </li>
-        <li class="nav-item">
-          Receipt
-        </li>
+        <li class="nav-item" @click="changeTo('planner')">Planner</li>
+        <li class="nav-item" @click="changeTo('statistics')">Statistiken</li>
       </ul>
     </div>
   </div>
 </template>
+
 <style scoped>
 .container {
   display: flex;
@@ -32,7 +34,7 @@
   padding-bottom: 4rem;
 }
 .module {
-  width: 20%;
+  width: auto;
   align-items: center;
   gap: 2rem;
   background-color: #1f1f1f;
@@ -45,6 +47,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.5rem;
+  overflow: hidden;
 }
 .nav-item {
   display: flex;

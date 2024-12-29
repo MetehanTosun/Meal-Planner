@@ -11,7 +11,6 @@ import org.springframework.web.server.ResponseStatusException;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
-import de.team5.sopra.backend.dto.UserSpecificRecipeDTO;
 
 @Service
 @Transactional
@@ -80,7 +79,6 @@ public class UserSpecificRecipeService {
 	 * Löscht einen UserSpecificRecipe-Eintrag
 	 */
 	public void deleteUserSpecificRecipe(Long id) {
-		// Check existence
 		getUserSpecificRecipeById(id);
 		userSpecificRecipeRepository.deleteById(id);
 	}

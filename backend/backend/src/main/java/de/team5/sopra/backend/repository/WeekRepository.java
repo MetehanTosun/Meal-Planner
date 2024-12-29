@@ -14,5 +14,7 @@ public interface WeekRepository extends JpaRepository<Week, Long> {
 
 	@Query("SELECT w FROM Week w WHERE w.user = :user ORDER BY w.startDate DESC")
 	List<Week> findByUserOrderByStartDateDesc(@Param("user") User user, Pageable pageable);
+
+	List<Week> findByUserId(Long userId);
 }
 

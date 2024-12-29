@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '@/axios'
-import { getUserId, setUserId } from '@/storage/localStorageManagement.js'
+import { setUserId } from '@/storage/localStorageManagement.js'
 import { useWeekStore } from '@/state-management/index.js'
 
 const router = useRouter()
@@ -32,9 +32,10 @@ const handleLogin = async () => {
     const response = await sendLogin();
     if (response.data.userId) {
       console.log('Login successful. Received userId:', response.data.userId);
-      setUserId(response.data.userId); // Save to localStorage
-      await fetchCurrentWeek(getUserId()); // Fetch the current week immediately after login
-      await router.push('/'); // Redirect to home page
+      setUserId(response.data.userId);
+      const weekStore = useWeekStore();
+      await weekStore.fetchWeeksInRange(2);
+      await router.push('/');
     } else {
       errorMessage.value = 'Login failed. Please check your credentials.';
     }
@@ -45,18 +46,7 @@ const handleLogin = async () => {
     password.value = '';
   }
 };
-async function fetchCurrentWeek() {
-  try {
-    console.log('Fetching current week for userId:', getUserId());
-    const response = await axios.get(`/weeks/current/${getUserId()}`);
-    const weekStore = useWeekStore();
-    weekStore.setWeekData(response.data); // Store week data in Pinia
-    console.log('Current week fetched successfully:', response.data);
-  } catch (error) {
-    console.error('Error fetching current week:', error);
-    throw error;
-  }
-};
+
 </script>
 
 <template>

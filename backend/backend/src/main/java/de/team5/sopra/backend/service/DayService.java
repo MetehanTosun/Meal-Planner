@@ -84,7 +84,6 @@ public class DayService {
 	}
 
 	public void removeRecipeFromDay(Long dayId, Long recipeId) {
-		// Fetch the day
 		Day day = dayRepository.findById(dayId)
 				.orElseThrow(() -> new EntityNotFoundException("Day not found with id: " + dayId));
 
@@ -97,7 +96,7 @@ public class DayService {
 		List<UserSpecificRecipe> matchingRecipes = new ArrayList<>();
 		for (UserSpecificRecipe userSpecificRecipe : day.getUserSpecificRecipes()) {
 			System.out.println("Checking UserSpecificRecipe with Recipe ID: " + userSpecificRecipe.getRecipe().getId());
-			if (userSpecificRecipe.getRecipe().getId() == recipeId) { // Primitive comparison
+			if (userSpecificRecipe.getRecipe().getId() == recipeId) {
 				matchingRecipes.add(userSpecificRecipe);
 			}
 		}
@@ -106,15 +105,8 @@ public class DayService {
 			throw new IllegalArgumentException("Recipe with ID " + recipeId + " is not assigned to the day with ID " + dayId);
 		}
 
-		System.out.println("Found matching UserSpecificRecipes: " + matchingRecipes);
-
-		// Remove all matching recipes
 		day.getUserSpecificRecipes().removeAll(matchingRecipes);
-
-		// Delete each matching recipe from the repository
 		matchingRecipes.forEach(userSpecificRecipeRepository::delete);
-
-		// Save the updated day
 		dayRepository.save(day);
 	}
 
