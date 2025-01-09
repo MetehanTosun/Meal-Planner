@@ -193,6 +193,7 @@ onMounted(fetchRecipes);
 }
 
 .diet-filter {
+  margin-top: 20px;
   margin-bottom: 20px;
   padding: 10px;
   background-color: rgba(30, 35, 45, 0.9);
