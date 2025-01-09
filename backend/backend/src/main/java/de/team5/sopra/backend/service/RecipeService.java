@@ -1,18 +1,21 @@
 package de.team5.sopra.backend.service;
 
-import de.team5.sopra.backend.dto.RecipeCreationDTO;
+import de.team5.sopra.backend.dto.ShareRecipeDTO;
 import de.team5.sopra.backend.models.Ingredient;
 import de.team5.sopra.backend.models.Recipe;
 
 import de.team5.sopra.backend.models.User;
 import de.team5.sopra.backend.repository.RecipeRepository;
+import de.team5.sopra.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -21,6 +24,8 @@ public class RecipeService {
 
     @Autowired
     private RecipeRepository recipeRepository;
+	@Autowired
+	private UserRepository userRepository;
 
     /**
      * Alle Recipes aus der DB holen
@@ -126,4 +131,38 @@ public class RecipeService {
         return recipeRepository.findByUser(user);
     }
 
+    /**
+     * Creates a copy of an original recipe, by getting recipe data via the id and then creating a new recipe
+     * and its ingredients.
+     *
+     * @param shareRecipeDTO includes recipeId of to be shared recipe and a userName of the receiver.
+     */
+    public void shareRecipe(ShareRecipeDTO shareRecipeDTO) {
+        if(shareRecipeDTO.getReceiverName() == null){
+            throw new IllegalArgumentException("The request needs to contain a non null receiver name.");
+        }
+        Optional<User> receiver = userRepository.findByUsername(shareRecipeDTO.getReceiverName());
+        if(receiver.isEmpty()) {
+            throw new IllegalArgumentException("The request needs to contain a existing user.");
+        }
+        Recipe originalRecipe = getRecipeById(shareRecipeDTO.getRecipeId());
+        Recipe copyRecipe = new Recipe();
+        copyRecipe.setName(originalRecipe.getName());
+        copyRecipe.setFoodType(originalRecipe.getFoodType());
+        copyRecipe.setTime(originalRecipe.getTime());
+        copyRecipe.setInstructions(new ArrayList<>(originalRecipe.getInstructions()));
+        copyRecipe.setUser(receiver.get());
+
+        List<Ingredient> copiedIngredients = new ArrayList<>();
+        for (Ingredient originalIngredient : originalRecipe.getIngredients()) {
+            Ingredient copiedIngredient = new Ingredient();
+            copiedIngredient.setName(originalIngredient.getName());
+            copiedIngredient.setAmount(originalIngredient.getAmount());
+            copiedIngredient.setUnit(originalIngredient.getUnit());
+            copiedIngredient.setRecipe(copyRecipe);
+            copiedIngredients.add(copiedIngredient);
+        }
+        copyRecipe.setIngredients(copiedIngredients);
+        recipeRepository.save(copyRecipe);
+    }
 }
