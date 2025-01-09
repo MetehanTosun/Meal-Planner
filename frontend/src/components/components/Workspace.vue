@@ -111,7 +111,7 @@ const handleDrop = async (event, dayId) => {
 
       if (existingRecipe) {
         await weekStore.incrementRecipePortions(existingRecipe.id);
-        existingRecipe.portions += 1; // Optimistic update
+        existingRecipe.portions += 1;
       } else {
         await weekStore.addRecipeToDay(dayId, recipe.id, 1);
       }

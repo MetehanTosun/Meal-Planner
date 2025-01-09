@@ -177,9 +177,10 @@ onMounted(fetchRecipes);
 <style scoped>
 .sidebar {
   width: 300px;
-  background-color: rgba(25, 30, 40, 0.95);
+  background-color: #1f1f1f;
   padding: 20px;
   border-radius: 8px;
+  border: 1px solid #fff;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
@@ -196,8 +197,9 @@ onMounted(fetchRecipes);
   margin-top: 20px;
   margin-bottom: 20px;
   padding: 10px;
-  background-color: rgba(30, 35, 45, 0.9);
+  background-color: #181818;
   border-radius: 6px;
+  border: 1px solid #fff;
   color: white;
 }
 
@@ -238,8 +240,9 @@ onMounted(fetchRecipes);
 .recipe-list li {
   margin: 10px 0;
   padding: 10px;
-  background-color: rgba(40, 45, 55, 0.8);
+  background-color: #181818;
   border-radius: 6px;
+  border: 1px solid #fff;
   color: white;
   text-align: center;
   cursor: pointer;
@@ -247,7 +250,7 @@ onMounted(fetchRecipes);
 }
 
 .recipe-list li:hover {
-  background-color: rgba(70, 130, 180, 0.3);
+  background-color: rgba(24, 24, 24, 0.1);
   transform: scale(1.02);
 }
 </style>
