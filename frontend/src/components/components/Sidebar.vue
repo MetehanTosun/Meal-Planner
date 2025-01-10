@@ -28,9 +28,16 @@
       </label>
     </div>
 
-    <div class="create-recipe">
+    <div class="action-buttons">
       <button class="create-recipe-button" @click="openCreateRecipe">
         + Neues Rezept
+      </button>
+      <button 
+        class="favorites-button" 
+        @click="toggleFavoritesFilter"
+        :class="{ active: showOnlyFavorites }"
+      >
+        <span class="star-icon">★</span> Favoriten anzeigen
       </button>
     </div>
 
@@ -43,7 +50,16 @@
         @dragend="dragEnd"
       >
         <div class="recipe-item">
-          <p>{{ recipe.name }}</p>
+          <div class="recipe-info">
+            <button 
+              class="favorite-toggle"
+              @click="toggleFavorite(recipe)"
+              :class="{ 'is-favorite': recipe.isFavorite }"
+            >
+              ★
+            </button>
+            <p>{{ recipe.name }}</p>
+          </div>
           <button class="share-button" @click.stop="openShareModal(recipe.id)">
             Teilen
           </button>
@@ -61,35 +77,38 @@
 </template>
 
 <script setup>
-/*
-  * Comments may not be 100% accurate, since they were generated with ChatGPT.
-  * The comments should be adjusted if needed. (Ethan Banovic)
- */
 import { ref, computed, onMounted } from 'vue';
 import SearchbarComponent from './SearchbarComponent.vue';
 import CreateRecipeView from './CreateRecipeView.vue';
 import ShareRecipeModal from './ShareRecipeModal.vue';
 import axios from '@/axios';
 
+// State
 const recipes = ref([]); // All recipes fetched from the backend
 const searchQuery = ref(''); // Current search query entered by the user
 const dietFilter = ref([]); // Array to store the active diet filters (e.g., ["VEGETARIAN", "VEGAN"])
 const draggedItem = ref(null); // Currently dragged recipe (for drag-and-drop functionality)
 const createRecipeModal = ref(null); // Reference to create recipe modal
 const shareRecipeModal = ref(null); // Reference to share recipe modal
+const showOnlyFavorites = ref(false); // Toggle for favorites filter
 
 /**
- * Computed property to filter recipes based on dietFilter and searchQuery.
- * - Filters recipes by diet type (e.g., "VEGETARIAN", "VEGAN").
- * - Applies search query to match recipe names.
+ * Computed property to filter recipes based on dietFilter, searchQuery, and favorites.
  */
 const filteredRecipes = computed(() => {
   let result = recipes.value;
 
+  // Apply favorites filter if enabled
+  if (showOnlyFavorites.value) {
+    result = result.filter(recipe => recipe.isFavorite);
+  }
+
+  // Apply diet filter if set
   if (dietFilter.value.length) {
     result = result.filter((recipe) => recipe.foodType === dietFilter.value[0]);
   }
 
+  // Apply search filter if query exists
   if (searchQuery.value.trim()) {
     result = result.filter((recipe) =>
       recipe.name.toLowerCase().includes(searchQuery.value.trim().toLowerCase())
@@ -100,14 +119,15 @@ const filteredRecipes = computed(() => {
 });
 
 /**
- * Fetch recipes from the backend API.
- * - Retrieves all recipes and assigns them to the `recipes` state.
- * - Logs an error if the fetch fails.
+ * Fetch recipes from the backend API
  */
 const fetchRecipes = async () => {
   try {
     const response = await axios.get('/recipes');
-    recipes.value = response.data;
+    recipes.value = response.data.map(recipe => ({
+      ...recipe,
+      isFavorite: false // Default value, should come from backend
+    }));
   } catch (error) {
     console.error('Error fetching recipes:', error);
     recipes.value = [];
@@ -115,30 +135,44 @@ const fetchRecipes = async () => {
 };
 
 /**
- * Apply the search query to filter recipes.
- * - Updates the `searchQuery` state.
- * - This function is called when the search query changes.
- * @param {string} query - The search query entered by the user.
+ * Toggle the favorites filter
+ */
+const toggleFavoritesFilter = () => {
+  showOnlyFavorites.value = !showOnlyFavorites.value;
+};
+
+/**
+ * Toggle favorite status for a recipe
+ */
+const toggleFavorite = async (recipe) => {
+  try {
+    // Here you would typically make an API call to update the favorite status
+    // await axios.post(`/recipes/${recipe.id}/favorite`, { isFavorite: !recipe.isFavorite });
+    recipe.isFavorite = !recipe.isFavorite;
+  } catch (error) {
+    console.error('Error toggling favorite:', error);
+    alert('Fehler beim Aktualisieren des Favoriten-Status');
+  }
+};
+
+/**
+ * Apply the search query to filter recipes
  */
 const applySearchQuery = (query) => {
   searchQuery.value = query;
 };
 
 /**
- * Apply the selected diet filter.
- * - Ensures only one diet filter is active at a time.
+ * Apply the diet filter
  */
 const applyDietFilter = () => {
   if (dietFilter.value.length > 1) {
-    dietFilter.value = [dietFilter.value[dietFilter.value.length - 1]]; // Keep only the last applied filter
+    dietFilter.value = [dietFilter.value[dietFilter.value.length - 1]];
   }
 };
 
 /**
- * Handle the drag-and-drop functionality.
- * - Called when a recipe starts being dragged.
- * @param {DragEvent} event - The drag event object.
- * @param {Object} recipe - The recipe being dragged.
+ * Handle drag start event
  */
 const dragStart = (event, recipe) => {
   draggedItem.value = recipe;
@@ -154,7 +188,7 @@ const dragStart = (event, recipe) => {
 };
 
 /**
- * Clear the `draggedItem` state after dragging ends.
+ * Handle drag end event
  */
 const dragEnd = () => {
   console.log('Drag ended:', draggedItem.value);
@@ -162,16 +196,14 @@ const dragEnd = () => {
 };
 
 /**
- * Open the recipe creation modal.
- * - Sets the modal's `showModal` property to true.
+ * Open create recipe modal
  */
 const openCreateRecipe = () => {
   createRecipeModal.value.showModal = true;
 };
 
 /**
- * Handle the creation of a new recipe.
- * - Fetches the updated list of recipes after a recipe is created.
+ * Handle recipe created event
  */
 const handleRecipeCreated = () => {
   console.log('Recipe created, refreshing recipes...');
@@ -179,15 +211,13 @@ const handleRecipeCreated = () => {
 };
 
 /**
- * Open the share recipe modal.
- * - Called when clicking the share button on a recipe.
- * @param {number} recipeId - The ID of the recipe to share.
+ * Open share modal for a recipe
  */
 const openShareModal = (recipeId) => {
   shareRecipeModal.value.openModal(recipeId);
 };
 
-// Fetch recipes when the component is mounted
+// Initialize
 onMounted(fetchRecipes);
 </script>
 
@@ -230,11 +260,16 @@ onMounted(fetchRecipes);
   margin-right: 8px;
 }
 
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 20px 0;
+}
+
 .create-recipe-button {
-  display: block;
   width: 100%;
   padding: 10px;
-  margin: 20px 0;
   font-size: 16px;
   color: white;
   background-color: #4CAF50;
@@ -246,6 +281,34 @@ onMounted(fetchRecipes);
 
 .create-recipe-button:hover {
   background-color: #45a049;
+}
+
+.favorites-button {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  color: white;
+  background-color: #FFA000;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.favorites-button:hover {
+  background-color: #FF8F00;
+}
+
+.favorites-button.active {
+  background-color: #FF6F00;
+}
+
+.star-icon {
+  font-size: 18px;
 }
 
 .recipe-list {
@@ -274,6 +337,32 @@ onMounted(fetchRecipes);
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
+}
+
+.recipe-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.favorite-toggle {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+.favorite-toggle:hover {
+  opacity: 0.8;
+}
+
+.favorite-toggle.is-favorite {
+  opacity: 1;
+  color: #FFB300;
 }
 
 .share-button {
