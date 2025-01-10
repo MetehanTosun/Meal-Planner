@@ -31,6 +31,17 @@
         <button @click="addIngredient" class="add-btn">+ Zutat hinzufügen</button>
       </div>
 
+      <!-- Instructions -->
+      <div class="instructions-section">
+        <h3>Zubereitungsschritte</h3>
+        <div v-for="(instruction, index) in recipe.instructions" :key="index" class="instruction-row">
+          <div class="instruction-number">{{index + 1}}.</div>
+          <input v-model="recipe.instructions[index]" type="text" placeholder="Zubereitungsschritt beschreiben">
+          <button @click="removeInstruction(index)" class="remove-btn">-</button>
+        </div>
+        <button @click="addInstruction" class="add-btn">+ Schritt hinzufügen</button>
+      </div>
+
       <!-- Foodtype -->
       <div class="form-group">
         <label>Art des Gerichts:</label>
@@ -66,8 +77,8 @@ const recipe = reactive({
       unit: 'G'
     }
   ],
-  foodType: 'MEAT',
-  instructions: []
+  instructions: [''], // Initialize with one empty instruction
+  foodType: 'MEAT'
 })
 
 const addIngredient = () => {
@@ -80,6 +91,14 @@ const addIngredient = () => {
 
 const removeIngredient = (index) => {
   recipe.ingredients.splice(index, 1)
+}
+
+const addInstruction = () => {
+  recipe.instructions.push('')
+}
+
+const removeInstruction = (index) => {
+  recipe.instructions.splice(index, 1)
 }
 
 const validateRecipe = () => {
@@ -103,6 +122,9 @@ const validateRecipe = () => {
       throw new Error('Bitte wählen Sie für alle Zutaten eine Einheit aus')
     }
   }
+  if (!recipe.instructions.length || !recipe.instructions.some(instruction => instruction.trim() !== '')) {
+    throw new Error('Bitte fügen Sie mindestens einen Zubereitungsschritt hinzu')
+  }
   if (!recipe.foodType) {
     throw new Error('Bitte wählen Sie eine Art des Gerichts aus')
   }
@@ -121,14 +143,13 @@ const saveRecipe = async () => {
         amount: parseInt(ingredient.amount),
         unit: ingredient.unit,
       })),
-      instructions: []
+      instructions: recipe.instructions.filter(instruction => instruction.trim() !== '')
     }
 
     console.log('Sending recipe:', recipeToSend)
 
     const response = await axios.post('/recipes', recipeToSend)
     console.log('Recipe saved successfully:', response.data)
-
 
     closeModal()
     emit('recipe-created')
@@ -165,6 +186,7 @@ const closeModal = () => {
     amount: null,
     unit: 'G'
   }]
+  recipe.instructions = ['']
   recipe.foodType = 'MEAT'
 }
 
@@ -219,7 +241,7 @@ input, select {
   border-radius: 4px;
 }
 
-.ingredients-section {
+.ingredients-section, .instructions-section {
   margin: 1rem 0;
 }
 
@@ -228,6 +250,19 @@ input, select {
   grid-template-columns: 2fr 1fr 1fr auto;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
+}
+
+.instruction-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  align-items: center;
+}
+
+.instruction-number {
+  padding: 0.5rem;
+  font-weight: bold;
 }
 
 .add-btn, .remove-btn {
