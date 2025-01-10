@@ -42,7 +42,12 @@
         @dragstart="dragStart($event, recipe)"
         @dragend="dragEnd"
       >
-        <p>{{ recipe.name }}</p>
+        <div class="recipe-item">
+          <p>{{ recipe.name }}</p>
+          <button class="share-button" @click.stop="openShareModal(recipe.id)">
+            Teilen
+          </button>
+        </div>
       </li>
     </ul>
 
@@ -50,9 +55,10 @@
       ref="createRecipeModal"
       @recipe-created="handleRecipeCreated"
     />
+    
+    <ShareRecipeModal ref="shareRecipeModal" />
   </div>
 </template>
-
 
 <script setup>
 /*
@@ -62,13 +68,15 @@
 import { ref, computed, onMounted } from 'vue';
 import SearchbarComponent from './SearchbarComponent.vue';
 import CreateRecipeView from './CreateRecipeView.vue';
+import ShareRecipeModal from './ShareRecipeModal.vue';
 import axios from '@/axios';
 
 const recipes = ref([]); // All recipes fetched from the backend
 const searchQuery = ref(''); // Current search query entered by the user
 const dietFilter = ref([]); // Array to store the active diet filters (e.g., ["VEGETARIAN", "VEGAN"])
 const draggedItem = ref(null); // Currently dragged recipe (for drag-and-drop functionality)
-const createRecipeModal = ref(false); // Modal state for creating new recipes
+const createRecipeModal = ref(null); // Reference to create recipe modal
+const shareRecipeModal = ref(null); // Reference to share recipe modal
 
 /**
  * Computed property to filter recipes based on dietFilter and searchQuery.
@@ -170,6 +178,15 @@ const handleRecipeCreated = () => {
   fetchRecipes();
 };
 
+/**
+ * Open the share recipe modal.
+ * - Called when clicking the share button on a recipe.
+ * @param {number} recipeId - The ID of the recipe to share.
+ */
+const openShareModal = (recipeId) => {
+  shareRecipeModal.value.openModal(recipeId);
+};
+
 // Fetch recipes when the component is mounted
 onMounted(fetchRecipes);
 </script>
@@ -244,13 +261,33 @@ onMounted(fetchRecipes);
   border-radius: 6px;
   border: 1px solid #fff;
   color: white;
-  text-align: center;
-  cursor: pointer;
   transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .recipe-list li:hover {
   background-color: rgba(24, 24, 24, 0.1);
   transform: scale(1.02);
+}
+
+.recipe-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.share-button {
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s ease;
+}
+
+.share-button:hover {
+  background-color: #1976D2;
 }
 </style>
