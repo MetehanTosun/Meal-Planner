@@ -1,22 +1,26 @@
 <script setup>
-import { defineProps, defineEmits } from 'vue';
+  import { defineProps, defineEmits } from 'vue';
 
-defineProps({
-  recipe: {
-    type: Object,
-    required: true,
-  },
-  show: {
-    type: Boolean,
-    required: true,
-  },
-});
+  const VEGETARIAN = 'VEGETARIAN';
+  const VEGAN = 'VEGAN';
+  const MEAT = 'MEAT';
 
-const emit = defineEmits(['close']);
+  defineProps({
+    recipe: {
+      type: Object,
+      required: true,
+    },
+    show: {
+      type: Boolean,
+      required: true,
+    },
+  });
 
-const closePopup = () => {
-  emit('close');
-};
+  const emit = defineEmits(['close']);
+
+  const closePopup = () => {
+    emit('close');
+  };
 </script>
 
 <template>
@@ -30,7 +34,7 @@ const closePopup = () => {
         <strong>Typ:</strong>
         <span v-if="recipe.recipeData.foodType=== VEGETARIAN"> Vegetarisch</span>
         <span v-else-if="recipe.recipeData.foodType=== VEGAN"> Vegan</span>
-        <span v-else> Enthält Fleisch</span>
+        <span v-else-if="recipe.recipeData.foodType=== MEAT"> Enthält Fleisch</span>
 
       </p>
       <h4 class="popup-subtitle">Zutaten:</h4>
