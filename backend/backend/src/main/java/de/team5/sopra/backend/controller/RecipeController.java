@@ -9,6 +9,7 @@ import de.team5.sopra.backend.models.Recipe;
 import de.team5.sopra.backend.models.User;
 import de.team5.sopra.backend.service.RecipeService;
 import de.team5.sopra.backend.service.UserService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -156,6 +157,59 @@ public class RecipeController {
 		}
 
 		throw new IllegalStateException("Unexpected Principal type: " + authentication.getPrincipal().getClass().getName());
+	}
+
+	@PutMapping("/{id}/toggle-favorite")
+	public ResponseEntity<RecipeDTO> toggleFavorite(@RequestHeader("User-Id") Long userId, @PathVariable Long id) {
+		try {
+			if (!userService.existsById(userId)) {
+				throw new EntityNotFoundException("User not found with id: " + userId);
+			}
+
+			Recipe recipe = recipeService.toggleFavorite(id, userId);
+			return ResponseEntity.ok(RecipeDTO.fromRecipe(recipe));
+		} catch (EntityNotFoundException e) {
+			log.error("User not found", e);
+			return ResponseEntity
+					.status(HttpStatus.NOT_FOUND)
+					.body(null);
+		} catch (Exception e) {
+			log.error("Error toggling favorite", e);
+			throw e;
+		}
+	}
+
+	@GetMapping("/{id}/is-favorite")
+	public ResponseEntity<Boolean> isFavorite(@PathVariable Long id) {
+		try {
+			Long userId = getCurrentUser().getId();
+			Recipe recipe = recipeService.getRecipeById(id);
+			return ResponseEntity.ok(recipe.isFavoriteByUser(userId));
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+		}
+	}
+
+
+	//Debugging
+	@GetMapping("/test-auth")  // wird zu /recipes/test-auth
+	public ResponseEntity<?> testAuth() {
+		try {
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			if (authentication != null) {
+				System.out.println("Authentication: " + authentication);
+				System.out.println("Principal: " + authentication.getPrincipal());
+				System.out.println("Authorities: " + authentication.getAuthorities());
+			} else {
+				System.out.println("No authentication found");
+			}
+			return ResponseEntity.ok("Authentication details printed to console");
+		} catch (Exception e) {
+			System.err.println("Error in testAuth: " + e.getMessage());
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("Error: " + e.getMessage());
+		}
 	}
 
 }

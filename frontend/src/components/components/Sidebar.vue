@@ -119,14 +119,20 @@ const filteredRecipes = computed(() => {
 });
 
 /**
- * Fetch recipes from the backend API
+ * Fetches all recipes from the backend API and processes their favorite status.
+ * - Retrieves the current user's ID from local storage
+ * - Makes an API call to get all recipes
+ * - Maps through the received recipes to add a favorite status flag
+ * - Updates the reactive recipes array with the processed data
+ * - Sets empty array if the fetch fails
  */
-const fetchRecipes = async () => {
+ const fetchRecipes = async () => {
   try {
+    const userId = localStorage.getItem('userId');
     const response = await axios.get('/recipes');
     recipes.value = response.data.map(recipe => ({
       ...recipe,
-      isFavorite: false // Default value, should come from backend
+      isFavorite: recipe.favoriteByUsers.includes(parseInt(userId))
     }));
   } catch (error) {
     console.error('Error fetching recipes:', error);
@@ -142,16 +148,35 @@ const toggleFavoritesFilter = () => {
 };
 
 /**
- * Toggle favorite status for a recipe
+ * Toggles the favorite status of a specific recipe for the current user.
+ * - Gets the user ID from local storage
+ * - Makes an API call to toggle the favorite status
+ * - Updates the local favorite status of the recipe on success
+ * - Shows an error alert if the toggle operation fails
+ * 
+ * @param {Object} recipe - The recipe object to toggle favorite status for
  */
-const toggleFavorite = async (recipe) => {
+ const toggleFavorite = async (recipe) => {
   try {
-    // Here you would typically make an API call to update the favorite status
-    // await axios.post(`/recipes/${recipe.id}/favorite`, { isFavorite: !recipe.isFavorite });
+    console.log('Toggling favorite for recipe:', recipe.id);
+    const response = await axios.put(`/recipes/${recipe.id}/toggle-favorite`);
+    console.log('Favorite toggled successfully:', response.data);
     recipe.isFavorite = !recipe.isFavorite;
   } catch (error) {
-    console.error('Error toggling favorite:', error);
-    alert('Fehler beim Aktualisieren des Favoriten-Status');
+    console.error('Toggle favorite error:', error);
+    
+    // Prüfe auf spezifische Fehlercodes
+    if (error.response?.status === 404) {
+      alert('Benutzer wurde nicht gefunden.');
+      return;
+    }
+    if (error.response?.status === 401) {
+      alert('Bitte melden Sie sich erneut an.');
+      return;
+    }
+
+    const errorMsg = error.response?.data?.message || error.message || 'Ein Fehler ist aufgetreten';
+    alert(errorMsg);
   }
 };
 

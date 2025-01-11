@@ -26,6 +26,11 @@
             <option value="ML">Milliliter</option>
             <option value="STÜCK">Stück</option>
           </select>
+          <select v-model="ingredient.foodType">
+            <option value="VEGAN">Vegan</option>
+            <option value="VEGETARIAN">Vegetarisch</option>
+            <option value="MEAT">Fleisch</option>
+          </select>
           <button @click="removeIngredient(index)" class="remove-btn">-</button>
         </div>
         <button @click="addIngredient" class="add-btn">+ Zutat hinzufügen</button>
@@ -74,10 +79,11 @@ const recipe = reactive({
     {
       name: '',
       amount: null,
-      unit: 'G'
+      unit: 'G',
+      foodType: 'MEAT'
     }
   ],
-  instructions: [''], // Initialize with one empty instruction
+  instructions: [''],
   foodType: 'MEAT'
 })
 
@@ -85,7 +91,8 @@ const addIngredient = () => {
   recipe.ingredients.push({
     name: '',
     amount: null,
-    unit: 'G'
+    unit: 'G',
+    foodType: 'MEAT'
   })
 }
 
@@ -121,6 +128,9 @@ const validateRecipe = () => {
     if (!ingredient.unit) {
       throw new Error('Bitte wählen Sie für alle Zutaten eine Einheit aus')
     }
+    if (!ingredient.foodType) {
+      throw new Error('Bitte wählen Sie für alle Zutaten eine Art aus')
+    }
   }
   if (!recipe.instructions.length || !recipe.instructions.some(instruction => instruction.trim() !== '')) {
     throw new Error('Bitte fügen Sie mindestens einen Zubereitungsschritt hinzu')
@@ -142,6 +152,7 @@ const saveRecipe = async () => {
         name: ingredient.name,
         amount: parseInt(ingredient.amount),
         unit: ingredient.unit,
+        foodType: ingredient.foodType
       })),
       instructions: recipe.instructions.filter(instruction => instruction.trim() !== '')
     }
@@ -184,7 +195,8 @@ const closeModal = () => {
   recipe.ingredients = [{
     name: '',
     amount: null,
-    unit: 'G'
+    unit: 'G',
+    foodType: 'MEAT'
   }]
   recipe.instructions = ['']
   recipe.foodType = 'MEAT'
@@ -247,7 +259,7 @@ input, select {
 
 .ingredient-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr auto;
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
 }

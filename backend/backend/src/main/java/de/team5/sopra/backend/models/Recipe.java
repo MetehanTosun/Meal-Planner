@@ -1,7 +1,9 @@
 package de.team5.sopra.backend.models;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -65,6 +67,14 @@ public class Recipe {
     @JsonBackReference
     private User user;
 
+    @ElementCollection
+    @CollectionTable(
+            name = "recipe_favorites",
+            joinColumns = @JoinColumn(name = "recipe_id")
+    )
+    @Column(name = "user_id")
+    private Set<Long> favoriteByUsers = new HashSet<>();
+
     public Recipe(){}
 
     public Recipe(String name, FoodType foodtype, List<Ingredient> ingredients, List<String> instructions, int time) {
@@ -90,5 +100,17 @@ public class Recipe {
     }
     public FoodType getFoodType() {
         return foodtype;
+    }
+
+    public void addFavoriteByUser(Long userId) {
+        this.favoriteByUsers.add(userId);
+    }
+
+    public void removeFavoriteByUser(Long userId) {
+        this.favoriteByUsers.remove(userId);
+    }
+
+    public boolean isFavoriteByUser(Long userId) {
+        return this.favoriteByUsers.contains(userId);
     }
 }

@@ -1,6 +1,7 @@
 package de.team5.sopra.backend.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import de.team5.sopra.backend.models.enums.FoodType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;

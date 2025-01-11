@@ -131,6 +131,18 @@ public class RecipeService {
         return recipeRepository.findByUser(user);
     }
 
+    public Recipe toggleFavorite(Long recipeId, Long userId) {
+        Recipe recipe = getRecipeById(recipeId);
+
+        if (recipe.isFavoriteByUser(userId)) {
+            recipe.removeFavoriteByUser(userId);
+        } else {
+            recipe.addFavoriteByUser(userId);
+        }
+
+        return recipeRepository.save(recipe);  // Speichern und zurückgeben
+    }
+
     /**
      * Creates a copy of an original recipe, by getting recipe data via the id and then creating a new recipe
      * and its ingredients.

@@ -49,6 +49,10 @@ public class UserService implements UserDetailsService {
         return userRepository.save(user);
     }
 
+    public boolean existsById(Long userId) {
+        return userRepository.existsById(userId);
+    }
+
     public User authenticateUser(String username, String password) {
         return userRepository.findByUsername(username)
                 .filter(user -> passwordEncoder.matches(password, user.getPassword()))
