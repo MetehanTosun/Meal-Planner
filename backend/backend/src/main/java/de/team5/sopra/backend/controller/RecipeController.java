@@ -189,27 +189,4 @@ public class RecipeController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 		}
 	}
-
-
-	//Debugging
-	@GetMapping("/test-auth")  // wird zu /recipes/test-auth
-	public ResponseEntity<?> testAuth() {
-		try {
-			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-			if (authentication != null) {
-				System.out.println("Authentication: " + authentication);
-				System.out.println("Principal: " + authentication.getPrincipal());
-				System.out.println("Authorities: " + authentication.getAuthorities());
-			} else {
-				System.out.println("No authentication found");
-			}
-			return ResponseEntity.ok("Authentication details printed to console");
-		} catch (Exception e) {
-			System.err.println("Error in testAuth: " + e.getMessage());
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body("Error: " + e.getMessage());
-		}
-	}
-
 }
