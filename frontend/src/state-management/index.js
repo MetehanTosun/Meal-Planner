@@ -3,7 +3,7 @@
 import { defineStore } from 'pinia';
 import axios from '@/axios';
 import { getUserId } from '@/storage/localStorageManagement.js';
-import router from '@/router'; // Ensure router is correctly imported
+//import router from '@/router'; // Ensure router is correctly imported
 
 function isDayPast(dayDate) {
   const today = new Date();
@@ -109,26 +109,35 @@ export const useWeekStore = defineStore('week', {
 
         // Update local state without refetching
         const existingRecipe = day.userSpecificRecipes.find(r => r.recipeData.id === recipeId);
-        const fetchRecipeName = async () => {
+
+
+        const fetchRecipeData = async () => {
           try {
             const response = await axios.get(`/recipes/${recipeId}`);
-            return response.data.name;
+            return response.data;
           } catch (error) {
-            console.error(`Error fetching recipe name for ID ${recipeId}:`, error);
-            return 'Unknown Recipe'; // Fallback name in case of an error
+            console.error(`Error fetching recipe data for ID ${recipeId}:`, error);
+            return {
+              id: recipeId,
+              name: 'Unknown Recipe',
+              foodType: 'MEAT',
+              time: 0
+            };
           }
         };
-        const recipeName = await fetchRecipeName();
-        console.log('Recipe Name of to be added recipe:',recipeName);
+
+        const recipeData = await fetchRecipeData();
+        console.log('Recipe data of to be added recipe:', recipeData);
+
         if (existingRecipe) {
           existingRecipe.portions += portions;
         } else {
           const newRecipe = {
-            id: recipeId, // Replace with actual ID from backend response if necessary
-            recipeData: { id: recipeId, name: recipeName }, // Replace with actual data
+            id: recipeId,
+            recipeData: recipeData,
             portions,
           };
-          day.userSpecificRecipes = [...day.userSpecificRecipes, newRecipe]; // Replace the array to trigger reactivity
+          day.userSpecificRecipes = [...day.userSpecificRecipes, newRecipe];
         }
 
         console.log(`Updated local state: week index ${this.currentWeekIndex} updated`);
