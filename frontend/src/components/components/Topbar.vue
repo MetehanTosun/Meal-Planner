@@ -24,7 +24,7 @@ const handleLogout = () => {
 
 <style>
 .topbar {
-  background-color: rgba(15, 20, 30, 0.95);
+  background-color: #181818;
   height: 60px;
   display: flex;
   align-items: center;

@@ -1,7 +1,7 @@
 <template>
   <div class="sidebar">
     <div class="sidebar-header">
-      <p>Recipes</p>
+      <p>Rezepte</p>
     </div>
 
     <SearchbarComponent @update:search="applySearchQuery" />
@@ -32,8 +32,8 @@
       <button class="create-recipe-button" @click="openCreateRecipe">
         + Neues Rezept
       </button>
-      <button 
-        class="favorites-button" 
+      <button
+        class="favorites-button"
         @click="toggleFavoritesFilter"
         :class="{ active: showOnlyFavorites }"
       >
@@ -51,7 +51,7 @@
       >
         <div class="recipe-item">
           <div class="recipe-info">
-            <button 
+            <button
               class="favorite-toggle"
               @click="toggleFavorite(recipe)"
               :class="{ 'is-favorite': recipe.isFavorite }"
@@ -71,7 +71,7 @@
       ref="createRecipeModal"
       @recipe-created="handleRecipeCreated"
     />
-    
+
     <ShareRecipeModal ref="shareRecipeModal" />
   </div>
 </template>
@@ -153,7 +153,7 @@ const toggleFavoritesFilter = () => {
  * - Makes an API call to toggle the favorite status
  * - Updates the local favorite status of the recipe on success
  * - Shows an error alert if the toggle operation fails
- * 
+ *
  * @param {Object} recipe - The recipe object to toggle favorite status for
  */
  const toggleFavorite = async (recipe) => {
@@ -164,7 +164,7 @@ const toggleFavoritesFilter = () => {
     recipe.isFavorite = !recipe.isFavorite;
   } catch (error) {
     console.error('Toggle favorite error:', error);
-    
+
     // Prüfe auf spezifische Fehlercodes
     if (error.response?.status === 404) {
       alert('Benutzer wurde nicht gefunden.');

@@ -15,7 +15,7 @@ const changeTo = (value) => {
     <div class="module">
       <ul class="nav">
         <!-- Neuer Menüpunkt "Planner" -->
-        <li class="nav-item" @click="changeTo('planner')">Planner</li>
+        <li class="nav-item" @click="changeTo('planner')">Planer</li>
         <li class="nav-item" @click="changeTo('shoppingList')">Einkaufszettel</li>
       </ul>
     </div>

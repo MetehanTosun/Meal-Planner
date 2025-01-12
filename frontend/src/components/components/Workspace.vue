@@ -10,7 +10,7 @@
         &#9664;
       </button>
       <div class="menu-bar">
-        <h2>Recipes for the Week</h2>
+        <h2>Rezepte der Woche</h2>
       </div>
       <button
         class="custom-arrow-button right"
