@@ -46,26 +46,28 @@
               v-for="recipe in weekStore.getRecipesForDay(day.id)"
               :key="recipe.id"
             >
-              <p>{{ recipe.recipeData.name || 'Recipe Placeholder' }}</p>
-              <div class="action-buttons">
-            <span
-              class="portionsDisplay"
-              @click="decrementPortions(recipe)"
-            >
-              {{ recipe.portions }}
-            </span>
-                <button
-                  class="informationTab"
-                  @click="openRecipeInfo(recipe)"
-                >
-                  <p>ℹ</p>
-                </button>
-                <button
-                  @click="removeRecipe(day.id, recipe.recipeData.id)"
-                  class="delete-recipe-button"
-                >
-                  x
-                </button>
+            <div class="recipe-title">
+                  <p>{{ recipe.recipeData.name || 'Recipe Placeholder' }}</p>
+                </div>
+                <div class="action-buttons">
+                  <span
+                    class="portionsDisplay"
+                    @click="decrementPortions(recipe)"
+                  >
+                    {{ recipe.portions }}
+                  </span>
+                  <button
+                    class="informationTab"
+                    @click="openRecipeInfo(recipe)"
+                  >
+                    <p>ℹ</p>
+                  </button>
+                  <button
+                    @click="removeRecipe(day.id, recipe.recipeData.id)"
+                    class="delete-recipe-button"
+                  >
+                    x
+                  </button>
               </div>
             </li>
           </ul>
@@ -208,9 +210,7 @@ const openRecipeInfo = (userSpecificRecipe) => {
 }
 
 .recipe-day-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  display: block;
   background-color: #333;
   color: white;
   border-radius: 4px;
@@ -221,10 +221,16 @@ const openRecipeInfo = (userSpecificRecipe) => {
   transition: background-color 0.3s ease;
 }
 
+.recipte-title {
+  margin-bottom: 0.5rem;
+  word-wrap: break-word;
+}
+
 .action-buttons {
   display: flex;
   align-items: center;
   gap: 0.3rem;
+  justify-content: flex-end;
 }
 
 .informationTab {

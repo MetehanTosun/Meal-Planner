@@ -254,7 +254,7 @@ export const useWeekStore = defineStore('week', {
       const days = state.weeks[state.currentWeekIndex]?.days || [];
       // Object to store aggregated ingredients
       const aggregated = {};
-     
+
       // Iterate through each day
       days.forEach((day) => {
         // Iterate through user specific recipes for each day
@@ -262,7 +262,7 @@ export const useWeekStore = defineStore('week', {
           const { recipeData, portions } = usr;
           // Skip if recipe data or ingredients are missing
           if (!recipeData || !recipeData.ingredients) return;
-     
+
           // Process each ingredient in the recipe
           recipeData.ingredients.forEach((ingredient) => {
             // Create unique key for each ingredient based on name and unit
@@ -281,7 +281,7 @@ export const useWeekStore = defineStore('week', {
           });
         });
       });
-     
+
       // Convert to array and sort by ingredient type
       return Object.values(aggregated).sort((a, b) => {
         // 'NONE' category should always be at the end
@@ -290,6 +290,18 @@ export const useWeekStore = defineStore('week', {
         // Sort other categories alphabetically
         return a.ingredientType.localeCompare(b.ingredientType);
       });
-     }
+     },
+
+     getCurrentWeekStartDate(state) {
+      const currentWeek = state.weeks[state.currentWeekIndex];
+      if (!currentWeek || !currentWeek.days || currentWeek.days.length === 0) return null;
+      return currentWeek.days[0].date;
+    },
+
+    getCurrentWeekEndDate(state) {
+      const currentWeek = state.weeks[state.currentWeekIndex];
+      if (!currentWeek || !currentWeek.days || currentWeek.days.length === 0) return null;
+      return currentWeek.days[currentWeek.days.length - 1].date;
+    }
   },
 });
