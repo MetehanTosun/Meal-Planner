@@ -16,25 +16,24 @@
       </div>
 
       <!-- Ingredients -->
-      <div class="ingredients-section">
-        <h3>Zutaten</h3>
-        <div v-for="(ingredient, index) in recipe.ingredients" :key="index" class="ingredient-row">
-          <input v-model="ingredient.name" type="text" placeholder="Zutat">
-          <input v-model="ingredient.amount" type="number" min="0" placeholder="Menge">
-          <select v-model="ingredient.unit">
-            <option value="G">Gramm</option>
-            <option value="ML">Milliliter</option>
-            <option value="STÜCK">Stück</option>
-          </select>
-          <select v-model="ingredient.foodType">
-            <option value="VEGAN">Vegan</option>
-            <option value="VEGETARIAN">Vegetarisch</option>
-            <option value="MEAT">Fleisch</option>
-          </select>
-          <button @click="removeIngredient(index)" class="remove-btn">-</button>
-        </div>
-        <button @click="addIngredient" class="add-btn">+ Zutat hinzufügen</button>
-      </div>
+      <div v-for="(ingredient, index) in recipe.ingredients" :key="index" class="ingredient-row">
+  <input v-model="ingredient.name" type="text" placeholder="Zutat">
+  <input v-model="ingredient.amount" type="number" min="0" placeholder="Menge">
+  <select v-model="ingredient.unit">
+    <option value="G">Gramm</option>
+    <option value="ML">Milliliter</option>
+    <option value="STÜCK">Stück</option>
+  </select>
+  <select v-model="ingredient.ingredientType">
+    <option v-for="(type, key) in INGREDIENT_TYPES" 
+            :key="key"
+            :value="key">
+      {{ type.label }}
+    </option>
+  </select>
+  <button @click="removeIngredient(index)" class="remove-btn">-</button>
+</div>
+<button @click="addIngredient" class="add-btn">+ Zutat hinzufügen</button>
 
       <!-- Instructions -->
       <div class="instructions-section">
@@ -69,6 +68,7 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import axios from '@/axios'
+import { INGREDIENT_TYPES } from '@/classes/IngredientTypes'
 
 const showModal = ref(false)
 const errorMessage = ref('')
@@ -80,7 +80,8 @@ const recipe = reactive({
       name: '',
       amount: null,
       unit: 'G',
-      foodType: 'MEAT'
+      foodType: 'MEAT',
+      ingredientType: 'NONE'
     }
   ],
   instructions: [''],
@@ -92,7 +93,8 @@ const addIngredient = () => {
     name: '',
     amount: null,
     unit: 'G',
-    foodType: 'MEAT'
+    foodType: 'MEAT',
+    ingredientType: 'NONE'
   })
 }
 
@@ -140,24 +142,31 @@ const validateRecipe = () => {
   }
 }
 
+/**
+* Asynchronous function to save a new recipe
+* Validates the recipe data, sends it to the backend, and handles responses/errors
+*/
 const saveRecipe = async () => {
   try {
+    // Validate all recipe fields before sending
     validateRecipe()
 
+    // Prepare recipe object for backend submission
     const recipeToSend = {
       name: recipe.name,
       time: parseInt(recipe.time),
       foodType: recipe.foodType,
+      // Map through ingredients array and transform data for backend format
       ingredients: recipe.ingredients.map(ingredient => ({
         name: ingredient.name,
         amount: parseInt(ingredient.amount),
         unit: ingredient.unit,
-        foodType: ingredient.foodType
+        foodType: ingredient.foodType,
+        ingredientType: ingredient.ingredientType
       })),
+      // Filter out empty instruction steps
       instructions: recipe.instructions.filter(instruction => instruction.trim() !== '')
     }
-
-    console.log('Sending recipe:', recipeToSend)
 
     const response = await axios.post('/recipes', recipeToSend)
     console.log('Recipe saved successfully:', response.data)
@@ -196,7 +205,8 @@ const closeModal = () => {
     name: '',
     amount: null,
     unit: 'G',
-    foodType: 'MEAT'
+    foodType: 'MEAT',
+    ingredientType: 'NONE'
   }]
   recipe.instructions = ['']
   recipe.foodType = 'MEAT'

@@ -2,6 +2,7 @@ package de.team5.sopra.backend.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import de.team5.sopra.backend.models.enums.FoodType;
+import de.team5.sopra.backend.models.enums.IngredientType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -34,6 +35,9 @@ public class Ingredient {
 		ML,
 		STÜCK,
 	}
+
+	@Enumerated(EnumType.STRING)
+	private IngredientType ingredientType = IngredientType.NONE;
 
 	/**
 	 * Beziehung zum Rezept (viele Zutaten gehören zu einem Rezept).

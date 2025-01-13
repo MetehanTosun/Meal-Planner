@@ -1,10 +1,16 @@
 <script setup>
 import { useWeekStore } from '@/state-management/index.js'
 import { onMounted, ref } from 'vue'
+import { INGREDIENT_TYPES } from '@/classes/IngredientTypes'
 import ReactiveDashboardShoppingList from '@/components/components/Dashboards/ReactiveDashboardShoppingList.vue'
 
-const weekStore = useWeekStore();
+const weekStore = useWeekStore()
 const isLoading = ref(true)
+
+const getIngredientTypeColor = (type) => {
+  console.log('Type:', type, 'Color:', INGREDIENT_TYPES[type]?.color || INGREDIENT_TYPES.NONE.color);
+  return INGREDIENT_TYPES[type]?.color || INGREDIENT_TYPES.NONE.color;
+}
 
 onMounted(async () => {
   try {
@@ -24,16 +30,18 @@ onMounted(async () => {
         <th>Zutat</th>
         <th>Menge</th>
         <th>Einheit</th>
+        <th>Kategorie</th>
       </tr>
       </thead>
       <tbody>
-      <tr
-        v-for="(item, index) in weekStore.getShoppingList"
-        :key="item.name + '_' + item.unit + '_' + index"
-      >
+      <tr v-for="(item, index) in weekStore.getShoppingList"
+          :key="item.name + '_' + item.unit + '_' + index">
         <td>{{ item.name }}</td>
         <td>{{ item.amount }}</td>
         <td>{{ item.unit }}</td>
+        <td :style="{ backgroundColor: getIngredientTypeColor(item.ingredientType) }">
+          {{ INGREDIENT_TYPES[item.ingredientType]?.label || 'Keine Kategorie' }}
+        </td>
       </tr>
       </tbody>
     </table>

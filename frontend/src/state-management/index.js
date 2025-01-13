@@ -250,37 +250,46 @@ export const useWeekStore = defineStore('week', {
       return day ? day.userSpecificRecipes || [] : [];
     },
     getShoppingList(state) {
+      // Get days from current week, or empty array if no data exists
       const days = state.weeks[state.currentWeekIndex]?.days || [];
-
-      // Dictionary, um Zutaten zu aggregieren
-      // Key: 'Zutatsname_Unit', Wert: { name, unit, amount }
+      // Object to store aggregated ingredients
       const aggregated = {};
-
+     
+      // Iterate through each day
       days.forEach((day) => {
-        // userSpecificRecipes enthält (id, recipeData, portions, ...)
+        // Iterate through user specific recipes for each day
         day.userSpecificRecipes?.forEach((usr) => {
           const { recipeData, portions } = usr;
-          // recipeData enthält laut deiner Models => ingredients: IngredientDTO[]
-          // Jede IngredientDTO hat: name, amount, unit, ...
+          // Skip if recipe data or ingredients are missing
           if (!recipeData || !recipeData.ingredients) return;
-
+     
+          // Process each ingredient in the recipe
           recipeData.ingredients.forEach((ingredient) => {
+            // Create unique key for each ingredient based on name and unit
             const key = ingredient.name + '_' + ingredient.unit;
+            // If this ingredient hasn't been added yet, initialize it
             if (!aggregated[key]) {
               aggregated[key] = {
                 name: ingredient.name,
                 unit: ingredient.unit,
                 amount: 0,
+                ingredientType: ingredient.ingredientType || 'NONE'
               };
             }
-            // amount * portions (z. B. 100 g * 2 Portionen = 200 g)
+            // Add to total amount (ingredient amount * recipe portions)
             aggregated[key].amount += ingredient.amount * portions;
           });
         });
       });
-
-      // In ein Array umwandeln
-      return Object.values(aggregated);
-    },
+     
+      // Convert to array and sort by ingredient type
+      return Object.values(aggregated).sort((a, b) => {
+        // 'NONE' category should always be at the end
+        if (a.ingredientType === 'NONE') return 1;
+        if (b.ingredientType === 'NONE') return -1;
+        // Sort other categories alphabetically
+        return a.ingredientType.localeCompare(b.ingredientType);
+      });
+     }
   },
 });
