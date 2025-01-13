@@ -147,6 +147,17 @@ export const useWeekStore = defineStore('week', {
       }
     },
 
+    async removeRecipeFromAllDays(recipeId) {
+      // Update local state by removing the recipe from all days in all weeks
+      this.weeks.forEach(week => {
+        week.days.forEach(day => {
+          day.userSpecificRecipes = day.userSpecificRecipes.filter(
+            recipe => recipe.recipeData.id !== recipeId
+          );
+        });
+      });
+    },
+
     /**
      * Remove a recipe from a day.
      * @param {number} dayId - The ID of the day.
@@ -234,6 +245,7 @@ export const useWeekStore = defineStore('week', {
       }
     },
   },
+
   getters: {
     /**
      * Get all days of the current week.
