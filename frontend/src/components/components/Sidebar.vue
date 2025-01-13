@@ -1,11 +1,15 @@
+<!-- Recipe sidebar component with filters and recipe list -->
 <template>
   <div class="sidebar">
+    <!-- Header -->
     <div class="sidebar-header">
       <p>Rezepte</p>
     </div>
-
+ 
+    <!-- Search bar -->
     <SearchbarComponent @update:search="applySearchQuery" />
-
+ 
+    <!-- Dietary preference filters -->
     <div class="diet-filter">
       <p>Filter:</p>
       <label>
@@ -27,7 +31,8 @@
         Vegan
       </label>
     </div>
-
+ 
+    <!-- Action buttons for creating recipes and showing favorites -->
     <div class="action-buttons">
       <button class="create-recipe-button" @click="openCreateRecipe">
         + Neues Rezept
@@ -40,7 +45,8 @@
         <span class="star-icon">★</span> Favoriten anzeigen
       </button>
     </div>
-
+ 
+    <!-- Recipe list with drag and drop support -->
     <ul class="recipe-list">
       <li
         v-for="recipe in filteredRecipes"
@@ -60,21 +66,26 @@
             </button>
             <p>{{ recipe.name }}</p>
           </div>
+          <!-- Recipe action buttons -->
           <button class="share-button" @click.stop="openShareModal(recipe.id)">
             Teilen
+          </button>
+          <button class="delete-button" @click.stop="deleteRecipe(recipe)">
+            ✕
           </button>
         </div>
       </li>
     </ul>
-
+ 
+    <!-- Modal components -->
     <CreateRecipeView
       ref="createRecipeModal"
       @recipe-created="handleRecipeCreated"
     />
-
     <ShareRecipeModal ref="shareRecipeModal" />
+    <DeleteConfirmationModal ref="deleteConfirmationModal" @confirm="handleDeleteConfirm" />
   </div>
-</template>
+ </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
@@ -82,6 +93,7 @@ import SearchbarComponent from './SearchbarComponent.vue';
 import CreateRecipeView from './CreateRecipeView.vue';
 import ShareRecipeModal from './ShareRecipeModal.vue';
 import axios from '@/axios';
+import DeleteConfirmationModal from './DeleteConfirmationModal.vue';
 
 // State
 const recipes = ref([]); // All recipes fetched from the backend
@@ -91,6 +103,7 @@ const draggedItem = ref(null); // Currently dragged recipe (for drag-and-drop fu
 const createRecipeModal = ref(null); // Reference to create recipe modal
 const shareRecipeModal = ref(null); // Reference to share recipe modal
 const showOnlyFavorites = ref(false); // Toggle for favorites filter
+const deleteConfirmationModal = ref(null); // Reference to the delete confirmation modal component
 
 /**
  * Computed property to filter recipes based on dietFilter, searchQuery, and favorites.
@@ -240,6 +253,27 @@ const handleRecipeCreated = () => {
  */
 const openShareModal = (recipeId) => {
   shareRecipeModal.value.openModal(recipeId);
+};
+
+
+/**
+* Opens the confirmation modal for recipe deletion
+*/
+const deleteRecipe = (recipe) => {
+  deleteConfirmationModal.value.openModal(recipe);
+};
+
+/**
+ * Handles the confirmation of recipe deletion
+ */
+ const handleDeleteConfirm = async (recipe) => {
+  try {
+    await axios.delete(`/recipes/${recipe.id}`);
+    await fetchRecipes(); // Refresh recipe list after successful deletion
+  } catch (error) {
+    console.error('Error deleting recipe:', error);
+    alert('Error deleting recipe. Please try again.');
+  }
 };
 
 // Initialize
@@ -403,5 +437,25 @@ onMounted(fetchRecipes);
 
 .share-button:hover {
   background-color: #1976D2;
+}
+
+.delete-button {
+  background-color: #000000;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s ease;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-button:hover {
+  background-color: #c82333;
 }
 </style>

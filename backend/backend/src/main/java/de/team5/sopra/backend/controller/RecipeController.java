@@ -83,8 +83,8 @@ public class RecipeController {
 	 * DELETE /recipes/{id} : Rezept löschen
 	 */
 	@DeleteMapping("/{id}")
-	public ResponseEntity<Void> deleteRecipe(@PathVariable Long id) {
-		User currentUser = getCurrentUser();
+	public ResponseEntity<Void> deleteRecipe(@RequestHeader("User-Id") Long userId, @PathVariable Long id) {
+		User currentUser = userService.getUserById(userId);
 		Recipe recipe = recipeService.getRecipeById(id);
 
 		if (!recipe.getUser().equals(currentUser)) {
