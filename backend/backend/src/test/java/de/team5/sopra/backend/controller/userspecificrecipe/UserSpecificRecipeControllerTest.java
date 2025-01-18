@@ -1,4 +1,4 @@
-package de.team5.sopra.backend.controller;
+package de.team5.sopra.backend.controller.userspecificrecipe;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.team5.sopra.backend.controller.general.UserSpecificRecipeController;

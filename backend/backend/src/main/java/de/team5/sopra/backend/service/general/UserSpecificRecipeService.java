@@ -2,6 +2,8 @@ package de.team5.sopra.backend.service.general;
 
 import de.team5.sopra.backend.models.UserSpecificRecipe;
 import de.team5.sopra.backend.repository.general.UserSpecificRecipeRepository;
+import de.team5.sopra.backend.service.DayService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.http.HttpStatus;
@@ -17,6 +19,8 @@ public class UserSpecificRecipeService {
 	@Autowired
 	private UserSpecificRecipeRepository userSpecificRecipeRepository;
 
+	@Autowired
+	private DayService dayService;
 	/**
 	 * Liefert alle UserSpecificRecipe-Einträge
 	 */
@@ -35,6 +39,7 @@ public class UserSpecificRecipeService {
 		}
 		return usr.get();
 	}
+
 
 	/**
 	 * Anlegen eines neuen UserSpecificRecipe-Eintrags
@@ -74,12 +79,29 @@ public class UserSpecificRecipeService {
 	 * Löscht einen UserSpecificRecipe-Eintrag
 	 */
 	public void deleteUserSpecificRecipe(Long id) {
-		// Check existence
 		getUserSpecificRecipeById(id);
 		userSpecificRecipeRepository.deleteById(id);
 	}
 
-	// Optional: weitere Suchmethoden
+	public UserSpecificRecipe incrementPortions(Long id) {
+		UserSpecificRecipe existingUsr = userSpecificRecipeRepository.findById(id)
+				.orElseThrow(() -> new EntityNotFoundException("UserSpecificRecipe not found with id " + id));
+
+		existingUsr.setPortions(existingUsr.getPortions() + 1);
+
+		return userSpecificRecipeRepository.save(existingUsr);
+	}
+
+	public UserSpecificRecipe decrementPortions(Long id) {
+		UserSpecificRecipe existingUsr = userSpecificRecipeRepository.findById(id)
+				.orElseThrow(() -> new EntityNotFoundException("UserSpecificRecipe not found with id " + id));
+		if(existingUsr.getPortions() == 0) {
+			throw new IllegalArgumentException("The portions can't be negative");
+		}
+		existingUsr.setPortions(existingUsr.getPortions() - 1);
+		return userSpecificRecipeRepository.save(existingUsr);
+	}
+
 	public List<UserSpecificRecipe> getAllByDay(Long dayId) {
 		return userSpecificRecipeRepository.findByDayId(dayId);
 	}

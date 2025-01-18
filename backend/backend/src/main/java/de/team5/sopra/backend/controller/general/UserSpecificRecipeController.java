@@ -72,4 +72,14 @@ public class UserSpecificRecipeController {
 	public List<UserSpecificRecipe> getAllByDay(@PathVariable Long dayId) {
 		return userSpecificRecipeService.getAllByDay(dayId);
 	}
+
+	@PostMapping("/{id}/increment-portions")
+	public UserSpecificRecipe incrementPortions(@PathVariable Long id) {
+		return userSpecificRecipeService.incrementPortions(id);
+	}
+
+	@PostMapping("/{id}/decrement-portions")
+	public UserSpecificRecipe decrementPortions(@PathVariable Long id) {
+		return userSpecificRecipeService.decrementPortions(id);
+	}
 }

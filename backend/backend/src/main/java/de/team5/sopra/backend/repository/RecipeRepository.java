@@ -7,6 +7,6 @@ import de.team5.sopra.backend.models.Recipe;
 import java.util.List;
 
 public interface RecipeRepository extends JpaRepository<Recipe, Long> {
-    List<Recipe> findByCreator(User user);
+    List<Recipe> findByUser(User user);
 
 }

@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { getUserId } from '@/storage/userStorage'
+import { getUserId } from '@/storage/localStorageManagement.js'
 
 const axiosInstance = axios.create({
   baseURL: 'http://localhost:8080',

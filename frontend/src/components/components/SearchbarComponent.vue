@@ -1,9 +1,20 @@
 <template>
   <div class="search-bar">
-    <input type="text" placeholder="Suchen..." v-model="searchQuery" @input="startSearch" />
-    <button class="icon" @click="startSearch">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24px" height="24px" fill="currentColor"
-        aria-hidden="true">
+    <input
+      type="text"
+      placeholder="Suchen..."
+      v-model="searchQuery"
+      @input="emitSearch"
+    />
+    <button class="icon">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        width="24px"
+        height="24px"
+        fill="currentColor"
+        aria-hidden="true"
+      >
         <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="2" fill="none" />
         <line x1="16" y1="16" x2="22" y2="22" stroke="currentColor" stroke-width="2" />
       </svg>
@@ -13,63 +24,16 @@
 
 <script setup>
 import { ref } from 'vue';
-import { mockRecipes } from '../../classes/MockRecipe.js';
-import { fetchRecipes } from '../../classes/ApiController.js';
 
 const searchQuery = ref('');
-const emit = defineEmits(['update:filtered-recipes']);
-
 /*
-const props = defineProps({
-  dietFilter: {
-    type: String,
-    required: false,
-    default: null,
-  },
-});
-*/
-
-// Commented out the startSearch function because the extern api will eventually not be used in the final web app
-
-/*
-async function startSearch() {
-  if (searchQuery.value.trim()) {
-    try {
-      // API query for real recipes
-      const filteredRecipes = await fetchRecipes(searchQuery.value);
-      console.log("Rezepte von API:", filteredRecipes);
-
-      // Uses the Mockrecipes if the Api does not have a response
-      if (filteredRecipes.length === 0) {
-        console.warn("Keine API-Ergebnisse gefunden. Verwende Mockrezepte.");
-        emit("update:filteredRecipes", mockRecipes.filter(mockRecipeFilter));
-      } else {
-        emit("update:filteredRecipes", filteredRecipes);
-      }
-    } catch (error) {
-      console.error("Fehler beim Abrufen der Rezepte. Verwende Mockrezepte:", error);
-      emit("update:filteredRecipes", mockRecipes.filter(mockRecipeFilter));
-    }
-  } else {
-    console.log("Keine Suchanfrage. Zeige alle Mockrezepte.");
-    emit("update:filteredRecipes", mockRecipes);
-  }
-}
-*/
-
-async function startSearch() {
-  if (searchQuery.value.trim()) {
-    const filteredRecipes = mockRecipes.filter(mockRecipeFilter);
-    emit("update:filteredRecipes", filteredRecipes);
-  } else {
-    console.log("Keine Suchanfrage. Zeige alle Mockrezepte.");
-    emit("update:filteredRecipes", mockRecipes);
-  }
+  * Kebab Casing for emits is what I found on the internet xD
+ */
+const emit = defineEmits(['update:search']);
+function emitSearch() {
+  emit('update:search', searchQuery.value.trim());
 }
 
-function mockRecipeFilter(recipe) {
-  return recipe.name.toLowerCase().includes(searchQuery.value.trim().toLowerCase());
-}
 </script>
 
 <style scoped>

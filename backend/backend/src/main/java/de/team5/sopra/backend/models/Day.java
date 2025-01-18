@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,22 +23,34 @@ public class Day {
 
 
     @ManyToOne
-    @JoinColumn(name = "week_id")
+    @JoinColumn(name = "week_id", nullable = false)
     @JsonBackReference
     private Week week;
 
     @DateTimeFormat(pattern = "dd.MM.yyyy")
     private Date date;
 
-    @ManyToMany(cascade = CascadeType.PERSIST)
-    @JoinTable(
-            name = "day_recipe",
-            joinColumns = @JoinColumn(name = "day_id"),
-            inverseJoinColumns = @JoinColumn(name = "recipe_id")
-    )
-    private List<Recipe> recipes = new ArrayList<>();
+    @OneToMany(mappedBy = "day", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("day-userSpecificRecipe")
+    private List<UserSpecificRecipe> userSpecificRecipes = new ArrayList<>();
 
     public Day() {
+    }
+
+    public Day(Week week, Date date, List<UserSpecificRecipe> userSpecificRecipes) {
+        this.week = week;
+        this.date = date;
+        userSpecificRecipes.forEach(userSpecificRecipe -> userSpecificRecipe.setDay(this));
+    }
+
+    public void addUserSpecificRecipe(UserSpecificRecipe userSpecificRecipe) {
+        userSpecificRecipes.add(userSpecificRecipe);
+        userSpecificRecipe.setDay(this);
+    }
+
+    public void removeUserSpecificRecipe(UserSpecificRecipe userSpecificRecipe) {
+        userSpecificRecipes.remove(userSpecificRecipe);
+        userSpecificRecipe.setDay(null);
     }
 
 }

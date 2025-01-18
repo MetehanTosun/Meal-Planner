@@ -7,6 +7,7 @@ const router = useRouter()
 const username = ref('')
 const password = ref('')
 
+
 const sendNewUser = async () => {
   console.log('Attempt Registration: ', {
     username: username.value,
@@ -21,23 +22,23 @@ const sendNewUser = async () => {
 
 const handleRegister = async () => {
   if (!username.value || !password.value) {
-    alert('Bitte fülle alle Felder aus!')
-    return
+    alert('Bitte fülle alle Felder aus!');
+    return;
   }
 
   try {
-    const response = await sendNewUser()
-    console.log('Registration response:', response)
+    const response = await sendNewUser();
+    console.log('Registration response:', response);
 
     if (response.status === 200) {
-      alert('Dein Account wurde erstellt!')
-      router.push('/login')
+      alert('Dein Account wurde erstellt!');
+      await router.push('/login');
     }
   } catch (err) {
-    console.error('Failed to Register:', err.response?.data || err)
-    alert(err.response?.data?.message || 'Registrierung fehlgeschlagen!')
+    console.error('Failed to Register:', err.response?.data || err);
+    alert(err.response?.data?.message || 'Registrierung fehlgeschlagen!');
   }
-}
+};
 </script>
 
 <template>

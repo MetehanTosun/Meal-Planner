@@ -8,7 +8,7 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
-import {isAuthenticated, clearUserId} from '@/storage/userStorage.js'
+import {isAuthenticated, clearUserId} from '@/storage/localStorageManagement.js'
 const router = useRouter()
 
 const navigateToLogin = () => {
@@ -24,7 +24,7 @@ const handleLogout = () => {
 
 <style>
 .topbar {
-  background-color: rgba(15, 20, 30, 0.95);
+  background-color: #181818;
   height: 60px;
   display: flex;
   align-items: center;

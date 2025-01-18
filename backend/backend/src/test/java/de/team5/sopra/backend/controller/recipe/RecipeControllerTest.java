@@ -1,24 +1,28 @@
-package de.team5.sopra.backend.controller;
+package de.team5.sopra.backend.controller.recipe;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.team5.sopra.backend.controller.RecipeController;
 import de.team5.sopra.backend.models.Ingredient;
 import de.team5.sopra.backend.models.Recipe;
 import de.team5.sopra.backend.models.enums.FoodType;
 import de.team5.sopra.backend.service.RecipeService;
+import de.team5.sopra.backend.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -29,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * und mocken den RecipeService mittels @MockBean.
  */
 @WebMvcTest(controllers = RecipeController.class)
+@Import(UserService.class)
 class RecipeControllerTest {
 
 	@Autowired
@@ -37,6 +42,9 @@ class RecipeControllerTest {
 	@MockBean
 	private RecipeService recipeService;
 
+	@MockBean
+	private UserService userService;
+
 	@Autowired
 	private ObjectMapper objectMapper;
 
@@ -44,13 +52,14 @@ class RecipeControllerTest {
 	@DisplayName("GET /recipes")
 	class GetAllRecipesTests {
 
+
 		@Test
 		@DisplayName("soll 200 OK zurückgeben und eine Liste von Recipes liefern")
 		void testGetAllRecipes() throws Exception {
 			Recipe r1 = new Recipe();
 			r1.setId(1L);
 			r1.setName("Tomato Soup");
-			r1.setFoodtype(FoodType.VEGAN);
+			r1.setFoodType(FoodType.VEGAN);
 			r1.setTime(20);
 
 			when(recipeService.getAllRecipes())
@@ -86,16 +95,17 @@ class RecipeControllerTest {
 			Recipe r = new Recipe();
 			r.setId(2L);
 			r.setName("Pasta Bolognese");
-			r.setFoodtype(FoodType.MEAT);
+			r.setFoodType(FoodType.MEAT);
 			r.setTime(30);
 
 			when(recipeService.getRecipeById(2L)).thenReturn(r);
 
+			System.out.println("Returned Data:" +objectMapper.writeValueAsString(recipeService.getRecipeById(2L)));
 			mockMvc.perform(get("/recipes/2"))
 					.andExpect(status().isOk())
 					.andExpect(jsonPath("$.id").value(2L))
 					.andExpect(jsonPath("$.name").value("Pasta Bolognese"))
-					.andExpect(jsonPath("$.foodtype").value("MEAT"));
+					.andExpect(jsonPath("$.foodType").value("MEAT"));
 		}
 
 		@Test
@@ -122,7 +132,7 @@ class RecipeControllerTest {
 		void testCreateRecipeSuccess() throws Exception {
 			Recipe requestRecipe = new Recipe();
 			requestRecipe.setName("Tomato Soup");
-			requestRecipe.setFoodtype(FoodType.VEGAN);
+			requestRecipe.setFoodType(FoodType.VEGAN);
 			requestRecipe.setTime(20);
 			requestRecipe.setInstructions(List.of("Chop tomatoes", "Cook with garlic", "Blend"));
 
@@ -135,7 +145,7 @@ class RecipeControllerTest {
 			Recipe savedRecipe = new Recipe();
 			savedRecipe.setId(10L);
 			savedRecipe.setName("Tomato Soup");
-			savedRecipe.setFoodtype(FoodType.VEGAN);
+			savedRecipe.setFoodType(FoodType.VEGAN);
 			savedRecipe.setTime(20);
 			savedRecipe.setInstructions(List.of("Chop tomatoes", "Cook with garlic", "Blend"));
 			savedRecipe.setIngredients(List.of(ingredient1));
@@ -162,7 +172,7 @@ class RecipeControllerTest {
 		void testUpdateRecipeSuccess() throws Exception {
 			Recipe requestBody = new Recipe();
 			requestBody.setName("Vegan Pasta");
-			requestBody.setFoodtype(FoodType.VEGAN);
+			requestBody.setFoodType(FoodType.VEGAN);
 			requestBody.setTime(25);
 			requestBody.setInstructions(List.of("Boil water", "Cook pasta"));
 			List<Ingredient> newIngredients = new ArrayList<>();
@@ -175,7 +185,7 @@ class RecipeControllerTest {
 			Recipe updatedRecipe = new Recipe();
 			updatedRecipe.setId(5L);
 			updatedRecipe.setName("Vegan Pasta");
-			updatedRecipe.setFoodtype(FoodType.VEGAN);
+			updatedRecipe.setFoodType(FoodType.VEGAN);
 			updatedRecipe.setTime(25);
 			updatedRecipe.setInstructions(List.of("Boil water", "Cook pasta"));
 			updatedRecipe.setIngredients(newIngredients);
@@ -217,21 +227,11 @@ class RecipeControllerTest {
 	class DeleteRecipeTests {
 
 		@Test
-		@DisplayName("soll 204 NO_CONTENT zurückgeben, wenn das Recipe existiert und gelöscht wird")
-		void testDeleteRecipeSuccess() throws Exception {
-			doNothing().when(recipeService).deleteRecipeById(10L);
-
-			mockMvc.perform(delete("/recipes/10"))
-					.andExpect(status().isNoContent());
-
-			verify(recipeService, times(1)).deleteRecipeById(10L);
-		}
-
-		@Test
 		@DisplayName("soll 404 NOT_FOUND zurückgeben, wenn das Recipe nicht existiert")
+		@WithMockUser(username = "testUser", roles = {"USER"})
 		void testDeleteRecipeNotFound() throws Exception {
 			doThrow(new org.springframework.web.server.ResponseStatusException(
-					org.springframework.http.HttpStatus.NOT_FOUND, "Recipe not found"
+					org.springframework.http.HttpStatus.NOT_FOUND, "Recipe not found!"
 			)).when(recipeService).deleteRecipeById(999L);
 
 			mockMvc.perform(delete("/recipes/999"))

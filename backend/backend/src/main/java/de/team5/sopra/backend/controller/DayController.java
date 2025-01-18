@@ -1,24 +1,16 @@
 package de.team5.sopra.backend.controller;
 
 //import java.lang.foreign.Linker.Option;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 import de.team5.sopra.backend.dto.AddRecipeToDayRequest;
-import de.team5.sopra.backend.dto.DayDTO;
 import de.team5.sopra.backend.dto.DayRequest;
-import de.team5.sopra.backend.dto.RecipeDTO;
-import de.team5.sopra.backend.models.Recipe;
-import de.team5.sopra.backend.models.User;
-import de.team5.sopra.backend.models.Week;
+import de.team5.sopra.backend.dto.UserSpecificRecipeDTO;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import de.team5.sopra.backend.models.Day;
@@ -28,7 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @RequestMapping("/days")
 public class DayController {
-    
+
     @Autowired
     private DayService dayService;
 
@@ -38,17 +30,18 @@ public class DayController {
      */
     @GetMapping
     public List<Day> getAllDays(){
-        return dayService.getAllDays();
+        List<Day> days = dayService.getAllDays();
+        days.forEach(System.out::println);
+        return days;
     }
 
     @GetMapping("/{id}")
     public Day getDayById(@PathVariable("id") Long id){
-        Day day = dayService.getDayById(id);
-        return day;
+        return dayService.getDayById(id);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delteDay(@PathVariable("id") Long id){
+    public ResponseEntity<?> deleteDay(@PathVariable("id") Long id){
         try{
             dayService.deleteDay(id);
             return ResponseEntity.noContent().build();
@@ -58,6 +51,21 @@ public class DayController {
 
     }
 
+    @DeleteMapping("/{dayId}/recipes/{recipeId}")
+    public ResponseEntity<String> removeRecipeFromDay(
+            @PathVariable Long dayId,
+            @PathVariable Long recipeId) {
+        try {
+            dayService.removeRecipeFromDay(dayId, recipeId);
+            return ResponseEntity.ok("Recipe successfully removed from the day.");
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred.");
+        }
+    }
     /*
      * String in the JSON send is okay, but the name has to be Uppercase because of ENUM in Day
      */
@@ -84,80 +92,27 @@ public class DayController {
         }
     }
 
-    @PostMapping("/{dayId}/add-recipe")
-    public ResponseEntity<DayDTO> addRecipeToDay(
-            @PathVariable Long dayId,
-            @RequestBody RecipeDTO recipeDTO
-    ) {
+    // NEW FEATURE
+
+    @PostMapping("/add-recipe")
+    public ResponseEntity<Day> addRecipeToDayWithPortions(@RequestBody @Valid AddRecipeToDayRequest request) {
+        System.out.println("The day id is: " + request.getDayId());
         try {
-            DayDTO updatedDay = dayService.addRecipeToDay(dayId, recipeDTO);
+            Day updatedDay = dayService.addRecipeToDayWithPortions(request.getDayId(), request.getRecipeId(), request.getPortions());
             return ResponseEntity.ok(updatedDay);
         } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
-    @GetMapping("/byName/{dayName}")
-    public ResponseEntity<DayDTO> getDayByName(@PathVariable String dayName) {
-        try {
-            // Wir holen die aktuelle Woche des eingeloggten Users
-            User currentUser = getCurrentUser();
-            Week currentWeek = currentUser.getWeeks().get(currentUser.getWeeks().size() - 1); // letzte/aktuelle Woche
-
-            // Suchen den passenden Tag
-            Day foundDay = null;
-            List<Day> days = currentWeek.getDays();
-
-            for (Day day : days) {
-                if (getDayName(day.getDate()).equalsIgnoreCase(dayName)) {
-                    foundDay = day;
-                    break;
-                }
-            }
-
-            if (foundDay == null) {
-                throw new EntityNotFoundException("Day not found: " + dayName);
-            }
-
-            return ResponseEntity.ok(DayDTO.fromDay(foundDay));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+    @GetMapping("/{dayId}/recipes")
+    public List<UserSpecificRecipeDTO> getUserSpecificRecipes(@PathVariable Long dayId) {
+        return dayService.getUserSpecificRecipesForDay(dayId);
     }
-
-    private User getCurrentUser() {
-        return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    }
-
-    // Hilfsmethode um aus einem Date den Wochentag zu bekommen
-    private String getDayName(Date date) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        return calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.ENGLISH);
-    }
-
-    @DeleteMapping("/{dayId}/remove-recipe/{recipeId}")
-    public ResponseEntity<DayDTO> removeRecipeFromDay(@PathVariable Long dayId, @PathVariable Long recipeId) {
-        try {
-            DayDTO updatedDay = dayService.removeRecipeFromDay(dayId, recipeId);
-            return ResponseEntity.ok(updatedDay);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    // TODO: ADD THIS POST-Mapping
-//    @PostMapping("/days/add-recipe")
-//    public ResponseEntity<Day> addRecipeToDayWithIdAndPortion(@RequestBody @Valid AddRecipeToDayRequest request) {
-//        try {
-//            Day updatedDay = dayService.addRecipeToDayWithIdAndPortion(request);
-//            return ResponseEntity.ok(updatedDay);
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.badRequest().body(null);
-//        }
-//    }
 
 
 }

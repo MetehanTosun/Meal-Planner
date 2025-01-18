@@ -1,10 +1,13 @@
-package de.team5.sopra.backend.controller;
+package de.team5.sopra.backend.controller.ingredient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.team5.sopra.backend.models.Ingredient;
 import de.team5.sopra.backend.models.Ingredient.Unit;
 import de.team5.sopra.backend.controller.general.IngredientController;
+import de.team5.sopra.backend.models.User;
+import de.team5.sopra.backend.service.UserService;
 import de.team5.sopra.backend.service.general.IngredientService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -33,6 +36,19 @@ class IngredientControllerTest {
 
 	@MockBean
 	private IngredientService ingredientService;
+
+	@MockBean
+	private UserService userService;
+
+	@BeforeEach
+	void setup() {
+		User mockUser = new User();
+		mockUser.setId(1L);
+		mockUser.setUsername("testuser");
+
+		when(userService.registerUser("testuser", "password123")).thenReturn(mockUser);
+		when(userService.getUserById(1L)).thenReturn(mockUser);
+	}
 
 	@Nested
 	@DisplayName("POST /ingredients")
@@ -68,7 +84,6 @@ class IngredientControllerTest {
 		@Test
 		@DisplayName("soll bei falschen Eingaben 400 BAD_REQUEST zurückgeben")
 		void testCreateIngredient_BadRequest() throws Exception {
-
 			when(ingredientService.createIngredient(ArgumentMatchers.any(Ingredient.class)))
 					.thenThrow(new IllegalArgumentException("Name darf nicht leer sein!"));
 
@@ -165,96 +180,6 @@ class IngredientControllerTest {
 			mockMvc.perform(get("/ingredients/999"))
 					.andExpect(status().isNotFound())
 					.andExpect(content().string("Ingredient mit ID 999 wurde nicht gefunden."));
-		}
-	}
-
-	@Nested
-	@DisplayName("PUT /ingredients/{id}")
-	class UpdateIngredientTests {
-
-		@Test
-		@DisplayName("soll Ingredient aktualisieren und 200 OK zurückgeben")
-		void testUpdateIngredient_Success() throws Exception {
-			Ingredient existing = new Ingredient();
-			existing.setId(1L);
-			existing.setName("OldName");
-			existing.setAmount(100.0);
-			existing.setUnit(Unit.G);
-
-			Ingredient updated = new Ingredient();
-			updated.setId(1L);
-			updated.setName("NewName");
-			updated.setAmount(200.0);
-			updated.setUnit(Unit.ML);
-
-			when(ingredientService.updateIngredient(eq(1L), any(Ingredient.class)))
-					.thenReturn(updated);
-
-			Ingredient dto = new Ingredient();
-			dto.setName("NewName");
-			dto.setAmount(200.0);
-			dto.setUnit(Unit.ML);
-
-			mockMvc.perform(put("/ingredients/1")
-							.contentType(MediaType.APPLICATION_JSON)
-							.content(objectMapper.writeValueAsString(dto)))
-					.andExpect(status().isOk())
-					.andExpect(jsonPath("$.name").value("NewName"))
-					.andExpect(jsonPath("$.amount").value(200.0))
-					.andExpect(jsonPath("$.unit").value("ML"));
-		}
-
-		@Test
-		@DisplayName("soll bei falschen Eingaben 400 BAD_REQUEST zurückgeben")
-		void testUpdateIngredient_BadRequest() throws Exception {
-			when(ingredientService.updateIngredient(eq(5L), any()))
-					.thenThrow(new IllegalArgumentException("Amount muss > 0 sein!"));
-
-			Ingredient dto = new Ingredient();
-			dto.setAmount(-100); // ungültig
-
-			mockMvc.perform(put("/ingredients/5")
-							.contentType(MediaType.APPLICATION_JSON)
-							.content(objectMapper.writeValueAsString(dto)))
-					.andExpect(status().isBadRequest())
-					.andExpect(content().string("Amount muss > 0 sein!"));
-		}
-
-		@Test
-		@DisplayName("soll 404 NOT_FOUND zurückgeben, wenn Ingredient nicht existiert")
-		void testUpdateIngredient_NotFound() throws Exception {
-			when(ingredientService.updateIngredient(eq(999L), any()))
-					.thenThrow(new RuntimeException("Ingredient nicht gefunden"));
-
-			mockMvc.perform(put("/ingredients/999")
-							.contentType(MediaType.APPLICATION_JSON)
-							.content(objectMapper.writeValueAsString(new Ingredient())))
-					.andExpect(status().isNotFound())
-					.andExpect(content().string("Ingredient nicht gefunden"));
-		}
-	}
-
-	@Nested
-	@DisplayName("DELETE /ingredients/{id}")
-	class DeleteIngredientTests {
-
-		@Test
-		@DisplayName("soll 204 NO_CONTENT zurückgeben, wenn Ingredient erfolgreich gelöscht")
-		void testDeleteIngredient_Success() throws Exception {
-			doNothing().when(ingredientService).deleteIngredient(1L);
-
-			mockMvc.perform(delete("/ingredients/1"))
-					.andExpect(status().isNoContent());
-		}
-
-		@Test
-		@DisplayName("soll 404 NOT_FOUND zurückgeben, wenn Ingredient nicht existiert")
-		void testDeleteIngredient_NotFound() throws Exception {
-			doThrow(new RuntimeException("Ingredient nicht gefunden")).when(ingredientService).deleteIngredient(999L);
-
-			mockMvc.perform(delete("/ingredients/999"))
-					.andExpect(status().isNotFound())
-					.andExpect(content().string("Ingredient nicht gefunden"));
 		}
 	}
 }

@@ -56,5 +56,4 @@ public class IngredientService {
 		Ingredient ing = getIngredientById(id);
 		ingredientRepository.delete(ing);
 	}
-
 }
