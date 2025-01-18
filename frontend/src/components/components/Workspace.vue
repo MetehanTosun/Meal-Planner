@@ -46,7 +46,8 @@
               v-for="recipe in weekStore.getRecipesForDay(day.id)"
               :key="recipe.id"
             >
-            <div class="recipe-title">
+              <div class="recipe-container">
+                <div class="recipe-title">
                   <p>{{ recipe.recipeData.name || 'Recipe Placeholder' }}</p>
                 </div>
                 <div class="action-buttons">
@@ -68,6 +69,7 @@
                   >
                     x
                   </button>
+                </div>
               </div>
             </li>
           </ul>
@@ -86,122 +88,15 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-<<<<<<< HEAD
-import axios from '@/axios'
-import { getUserId } from '@/storage/userStorage'
-import router from '@/router';
-import { weeklyList } from '@/classes/weeklyList';
-
-
-const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-=======
 import { useWeekStore } from '@/state-management/index.js';
 import ReactiveDashboard from '@/components/components/Dashboards/ReactiveDashboardPlanner.vue';
 import RecipeDataPopup from '@/components/components/RecipeDataPopup.vue'
 
 const weekStore = useWeekStore();
 const selectedRecipe = ref(null);
->>>>>>> user-specific-recipe
 
 const showPopup = ref(false);
 
-<<<<<<< HEAD
-const fetchOrCreateWeek = async () => {
-  try {
-    const userId = getUserId()
-    if (!userId) {
-      router.push('/login')
-      return
-    }
-
-    console.log('Fetching week for user:', userId)
-    const response = await axios.get(`/weeks/current/${userId}`)
-    const weekData = response.data
-
-    console.log('Received week data:', weekData)
-    clearWeeklyList()
-
-    if (weekData.days) {
-      weekData.days.forEach((day) => {
-        if (day.date) {
-          const date = new Date(day.date)
-          const dayName = date.toLocaleDateString('en-US', { weekday: 'long' })
-          if (weeklyList.value[dayName]) {
-            weeklyList.value[dayName] = day.recipes || []
-          }
-        }
-      })
-    }
-  } catch (error) {
-    console.error('Error fetching week:', error)
-  }
-}
-
-const getDayId = async (dayName) => {
-  try {
-    const response = await axios.get(`/days/byName/${dayName}`);
-    return response.data.id;
-  } catch (error) {
-    console.error(`Error getting day ID for ${dayName}:`, error);
-    throw error;
-  }
-};
-
-const addRecipe = async (event, dayName) => {
-  try {
-    if (!event.dataTransfer || !event.dataTransfer.getData) {
-      console.error("No valid dataTransfer object found in event.");
-      return;
-    }
-
-    const recipeData = event.dataTransfer.getData("application/json");
-    if (!recipeData) {
-      console.error("No recipe data found in event.");
-      return;
-    }
-
-    const recipe = JSON.parse(recipeData);
-    console.log("Recipe to add:", recipe);
-
-    const dayId = await getDayId(dayName);
-    console.log(`Got day ID ${dayId} for ${dayName}`);
-
-    if (!weeklyList.value[dayName]) {
-      console.error(`No list found for day ${dayName}`);
-      return;
-    }
-
-    const response = await axios.post(`/days/${dayId}/add-recipe`, recipe);
-
-    if (response.data) {
-      weeklyList.value[dayName].push(recipe);
-      console.log(`Recipe added to ${dayName} (ID: ${dayId}) on the server.`);
-    }
-  } catch (error) {
-    console.error("Error adding recipe:", error.response?.data || error.message || error);
-  }
-};
-
-const deleteRecipe = async (day, index) => {
-  try {
-    const recipe = weeklyList.value[day][index];
-    if (!recipe || !recipe.id) {
-      console.error('No valid recipe found at index', index);
-      return;
-    }
-
-    const dayId = await getDayId(day);
-    
-    await axios.delete(`/days/${dayId}/remove-recipe/${recipe.id}`);
-    
-    weeklyList.value[day].splice(index, 1);
-    
-    console.log(`Recipe removed from ${day}`);
-  } catch (error) {
-    console.error("Error removing recipe:", error.response?.data || error.message || error);
-  }
-};
-=======
 const handleDrop = async (event, dayId) => {
   const recipeData = event.dataTransfer.getData('application/json');
   if (recipeData) {
@@ -213,7 +108,6 @@ const handleDrop = async (event, dayId) => {
         console.error(`Day with ID ${dayId} not found.`);
         return;
       }
->>>>>>> user-specific-recipe
 
       const existingRecipe = day.userSpecificRecipes.find(
         (r) => r.recipeData.id === recipe.id
@@ -466,9 +360,6 @@ const openRecipeInfo = (userSpecificRecipe) => {
 .custom-arrow-button.left {
   margin-right: auto;
 }
-<<<<<<< HEAD
-</style>
-=======
 
 .custom-arrow-button.right {
   margin-left: auto;
@@ -483,4 +374,3 @@ const openRecipeInfo = (userSpecificRecipe) => {
 }
 
 </style>
->>>>>>> user-specific-recipe

@@ -48,31 +48,12 @@
       </div>
     </div>
 
-<<<<<<< HEAD
-    <div class="create-recipe">
-      <button class="create-recipe-button" @click="openCreateRecipe">
-        + Neues Rezept
-      </button>
-    </div>
-
-    <!-- Button für die Einkaufsliste -->
-    <div class="generate-shopping-list">
-      <button class="shopping-list-button" @click="openModal">
-        Einkaufsliste generieren
-      </button>
-    </div>
-
-    <ul class="recipe-list">
-      <li v-for="item in filteredRecipes"
-          :key="item.id"
-=======
     <!-- Scrollable recipe list -->
     <div class="recipe-list-container">
       <ul class="recipe-list">
         <li
           v-for="recipe in filteredRecipes"
           :key="recipe.id"
->>>>>>> user-specific-recipe
           :draggable="true"
           @dragstart="dragStart($event, recipe)"
           @dragend="dragEnd"
@@ -105,67 +86,12 @@
       ref="createRecipeModal"
       @recipe-created="handleRecipeCreated"
     />
-<<<<<<< HEAD
-
-    <!-- Modal für die Einkaufsliste -->
-<div v-if="isModalOpen" class="modal-overlay">
-  <div class="modal-content">
-    <h2>Einkaufsliste</h2>
-    <div v-if="Object.keys(shoppingList).length > 0">
-      <ul>
-        <li v-for="(amount, ingredient) in shoppingList" :key="ingredient">
-          {{ ingredient }}: {{ amount }}
-        </li>
-      </ul>
-    </div>
-    <div v-else>
-      <p>Die Liste ist leer.</p>
-    </div>
-    <button class="close-btn" @click="closeModal">Schließen</button>
-  </div>
-</div>
-
-=======
     <ShareRecipeModal ref="shareRecipeModal" />
     <DeleteConfirmationModal ref="deleteConfirmationModal" @confirm="handleDeleteConfirm" />
->>>>>>> user-specific-recipe
   </div>
 </template>
 
 <script setup>
-<<<<<<< HEAD
-import { ref, onMounted } from 'vue';
-import axios from '@/axios';
-import SearchbarComponent from './SearchbarComponent.vue';
-import CreateRecipeView from './CreateRecipeView.vue';
-
-const recipes = ref([]);
-const filteredRecipes = ref([]);
-const draggedItem = ref(null);
-const dietFilter = ref([]);
-const createRecipeModal = ref(null);
-
-// Einkaufsliste
-const shoppingList = ref([]);
-const isModalOpen = ref(false);
-
-const fetchRecipes = async () => {
-  try {
-    const response = await axios.get('/recipes');
-    recipes.value = response.data;
-    applyDietFilter(recipes.value);
-  } catch (error) {
-    console.error('Error fetching recipes:', error);
-    recipes.value = [];
-  }
-};
-
-const dragStart = (event, item) => {
-  draggedItem.value = item;
-  const dragData = { ...item };
-  event.dataTransfer.setData("application/json", JSON.stringify(dragData));
-};
-=======
   import { ref, computed, onMounted } from 'vue';
   import SearchbarComponent from './SearchbarComponent.vue';
   import CreateRecipeView from './CreateRecipeView.vue';
@@ -304,7 +230,6 @@ const dragStart = (event, item) => {
     event.dataTransfer.setData('application/json', JSON.stringify(dragData));
     console.log('Drag started:', dragData);
   };
->>>>>>> user-specific-recipe
 
   /**
    * Handle drag end event
@@ -314,69 +239,13 @@ const dragStart = (event, item) => {
     draggedItem.value = null;
   };
 
-<<<<<<< HEAD
-const handleDietChange = () => {
-  if (dietFilter.value.length > 1) {
-    dietFilter.value = [dietFilter.value[dietFilter.value.length - 1]];
-  }
-  applyDietFilter(recipes.value);
-};
-
-const applyDietFilter = (recipeList = []) => {
-  const currentFilter = dietFilter.value[0];
-  filteredRecipes.value = !currentFilter
-    ? recipeList
-    : recipeList.filter(recipe => recipe.foodtype === currentFilter);
-};
-
-const openCreateRecipe = () => {
-  if (createRecipeModal.value) {
-=======
   /**
    * Open create recipe modal
    */
   const openCreateRecipe = () => {
->>>>>>> user-specific-recipe
     createRecipeModal.value.showModal = true;
   };
 
-<<<<<<< HEAD
-const handleRecipeCreated = () => {
-  fetchRecipes();
-};
-
-// Funktionen für die Einkaufsliste
-const openModal = async () => {
-  await generateShoppingList();
-  isModalOpen.value = true;
-};
-
-const closeModal = () => {
-  isModalOpen.value = false;
-};
-
-const generateShoppingList = async () => {
-  try {
-    // POST-Anfrage mit Axios
-    const response = await axios.post('/shopping-list', recipes.value);
-    
-    // Antwort-Daten direkt auslesen
-    shoppingList.value = response.data;
-
-    // Debugging: Einkaufsliste und Antwort loggen
-    console.log('Einkaufsliste:', shoppingList.value);
-    console.log('Vollständige Antwort:', response);
-  } catch (error) {
-    console.error('Fehler beim Generieren der Einkaufsliste:', error);
-  }
-};
-
-
-// Initialisierung
-onMounted(() => {
-  fetchRecipes();
-});
-=======
   /**
    * Handle recipe created event
    */
@@ -416,7 +285,6 @@ onMounted(() => {
 
   // Initialize
   onMounted(fetchRecipes);
->>>>>>> user-specific-recipe
 </script>
 
 <style scoped>
@@ -461,64 +329,6 @@ onMounted(() => {
   border-radius: 4px;
 }
 
-<<<<<<< HEAD
-.create-recipe-button:hover {
-  background-color: #45a049;
-}
-
-.shopping-list-button {
-  width: 100%;
-  padding: 0.75rem;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin: 1rem 0;
-  font-size: 1rem;
-}
-
-.shopping-list-button:hover {
-  background-color: #45a049;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000; /* Sehr hoher Wert, um über allen anderen Elementen zu liegen */
-}
-
-.modal-content {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 400px;
-  text-align: center;
-  z-index: 1000; /* Sehr hoher Wert, um über allen anderen Elementen zu liegen */
-}
-
-.close-btn {
-  margin-top: 20px;
-  background: #f44336;
-  color: white;
-  border: none;
-  padding: 10px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.close-btn:hover {
-  background: #d32f2f;
-}
-=======
   .sidebar-header {
     font-weight: bold;
     font-size: 20px;
@@ -687,5 +497,4 @@ onMounted(() => {
   .delete-button:hover {
     background-color: #c82333;
   }
->>>>>>> user-specific-recipe
 </style>
