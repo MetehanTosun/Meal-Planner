@@ -2,7 +2,7 @@ import axios from 'axios'
 import { getUserId } from '@/storage/localStorageManagement.js'
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:8080',
+  baseURL: 'http://[2001:7c0:2320:1:f816:3eff:fe54:3865]:8080',
   headers: {
     'Content-Type': 'application/json'
   }

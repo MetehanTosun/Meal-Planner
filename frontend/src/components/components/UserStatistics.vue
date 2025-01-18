@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import axios from '@/axios'
 import 'chart.js/auto'
 import { Chart } from 'chart.js'
 import { getUserId } from '@/storage/localStorageManagement.js'
@@ -14,7 +14,7 @@ const userId = getUserId()
 
 const fetchStatistics = async () => {
   try {
-    const response = await axios.get(`http://localhost:8080/users/${userId}/statistics`)
+    const response = await axios.get(`/users/${userId}/statistics`)
     statistics.value = response.data
   } catch (error) {
     console.error(error)
@@ -41,11 +41,11 @@ const initCharts = () => {
           label: 'Verteilung Essensarten',
           data: countsFood,
           backgroundColor: [
-            '#f0ad4e', // z.B. Orange
-            '#5bc0de', // z.B. Hellblau
-            '#5cb85c', // z.B. Grün
-            '#d9534f', // z.B. Rot
-            '#337ab7', // z.B. Blau
+            '#f0ad4e',
+            '#5bc0de',
+            '#5cb85c',
+            '#d9534f',
+            '#337ab7',
           ],
           borderColor: '#222',
           borderWidth: 2,
