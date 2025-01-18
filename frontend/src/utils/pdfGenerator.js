@@ -1,3 +1,5 @@
+import { INGREDIENT_TYPES } from '@/classes/IngredientTypes'
+
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 
@@ -39,17 +41,24 @@ export const generateShoppingListPDF = (shoppingList, startDate, endDate) => {
       {
         table: {
           headerRows: 1,
-          widths: ['*', '*', '*'],
+          // Hier fügen wir eine zusätzliche Spalte hinzu
+          widths: ['*', '*', '*', '*'],
           body: [
             [
               { text: 'Zutat', style: 'tableHeader' },
               { text: 'Menge', style: 'tableHeader' },
-              { text: 'Einheit', style: 'tableHeader' }
+              { text: 'Einheit', style: 'tableHeader' },
+              { text: 'Kategorie', style: 'tableHeader' }  // Neue Spalte
             ],
             ...shoppingList.map(item => [
               item.name,
               { text: item.amount.toString(), alignment: 'right' },
-              item.unit
+              item.unit,
+              // Neue Kategorie-Spalte mit Wert
+              { 
+                text: INGREDIENT_TYPES[item.ingredientType]?.label || 'Keine Kategorie',
+                fillColor: INGREDIENT_TYPES[item.ingredientType]?.color || INGREDIENT_TYPES.NONE.color
+              }
             ])
           ]
         }

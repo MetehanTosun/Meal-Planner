@@ -59,22 +59,23 @@
   })
 
   const downloadPDF = () => {
-    const startDate = weekStore.getCurrentWeekStartDate;
-    const endDate = weekStore.getCurrentWeekEndDate;
+  const startDate = weekStore.getCurrentWeekStartDate;
+  const endDate = weekStore.getCurrentWeekEndDate;
 
-    if (!startDate || !endDate) {
-      console.error('Start- oder Enddatum nicht verfügbar');
-      return;
-    }
+  if (!startDate || !endDate) {
+    console.error('Start- oder Enddatum nicht verfügbar');
+    return;
+  }
 
-    const pdf = generateShoppingListPDF(
-      weekStore.getShoppingList,
-      startDate,
-      endDate
-    );
+  const pdf = generateShoppingListPDF(
+    weekStore.getShoppingList,
+    startDate,
+    endDate,
+    INGREDIENT_TYPES  // INGREDIENT_TYPES als zusätzlicher Parameter
+  );
 
-    pdf.download(`Einkaufszettel_${startDate.split('T')[0]}.pdf`);
-  };
+  pdf.download(`Einkaufszettel_${startDate.split('T')[0]}.pdf`);
+};
 </script>
 
 <style scoped>
