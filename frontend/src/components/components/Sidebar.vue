@@ -1,82 +1,86 @@
-<!-- Recipe sidebar component with filters and recipe list -->
 <template>
   <div class="sidebar">
-    <!-- Header -->
-    <div class="sidebar-header">
-      <p>Rezepte</p>
+    <!-- Fixed content -->
+    <div class="sidebar-fixed">
+      <!-- Header -->
+      <div class="sidebar-header">
+        <p>Rezepte</p>
+      </div>
+ 
+      <!-- Search bar -->
+      <SearchbarComponent @update:search="applySearchQuery" />
+ 
+      <!-- Dietary preference filters -->
+      <div class="diet-filter">
+        <p>Filter:</p>
+        <label>
+          <input
+            type="checkbox"
+            value="VEGETARIAN"
+            v-model="dietFilter"
+            @change="applyDietFilter"
+          />
+          Vegetarisch
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            value="VEGAN"
+            v-model="dietFilter"
+            @change="applyDietFilter"
+          />
+          Vegan
+        </label>
+      </div>
+ 
+      <!-- Action buttons for creating recipes and showing favorites -->
+      <div class="action-buttons">
+        <button class="create-recipe-button" @click="openCreateRecipe">
+          + Neues Rezept
+        </button>
+        <button
+          class="favorites-button"
+          @click="toggleFavoritesFilter"
+          :class="{ active: showOnlyFavorites }"
+        >
+          <span class="star-icon">★</span> Favoriten anzeigen
+        </button>
+      </div>
     </div>
 
-    <!-- Search bar -->
-    <SearchbarComponent @update:search="applySearchQuery" />
-
-    <!-- Dietary preference filters -->
-    <div class="diet-filter">
-      <p>Filter:</p>
-      <label>
-        <input
-          type="checkbox"
-          value="VEGETARIAN"
-          v-model="dietFilter"
-          @change="applyDietFilter"
-        />
-        Vegetarisch
-      </label>
-      <label>
-        <input
-          type="checkbox"
-          value="VEGAN"
-          v-model="dietFilter"
-          @change="applyDietFilter"
-        />
-        Vegan
-      </label>
-    </div>
-
-    <!-- Action buttons for creating recipes and showing favorites -->
-    <div class="action-buttons">
-      <button class="create-recipe-button" @click="openCreateRecipe">
-        + Neues Rezept
-      </button>
-      <button
-        class="favorites-button"
-        @click="toggleFavoritesFilter"
-        :class="{ active: showOnlyFavorites }"
-      >
-        <span class="star-icon">★</span> Favoriten anzeigen
-      </button>
-    </div>
-
-    <!-- Recipe list with drag and drop support -->
-    <ul class="recipe-list">
-      <li
-        v-for="recipe in filteredRecipes"
-        :key="recipe.id"
-        :draggable="true"
-        @dragstart="dragStart($event, recipe)"
-        @dragend="dragEnd"
-      >
-        <div class="recipe-item">
-          <div class="recipe-info">
-            <button
-              class="favorite-toggle"
-              @click="toggleFavorite(recipe)"
-              :class="{ 'is-favorite': recipe.isFavorite }"
-            >
-              ★
+    <!-- Scrollable recipe list -->
+    <div class="recipe-list-container">
+      <ul class="recipe-list">
+        <li
+          v-for="recipe in filteredRecipes"
+          :key="recipe.id"
+          :draggable="true"
+          @dragstart="dragStart($event, recipe)"
+          @dragend="dragEnd"
+        >
+          <div class="recipe-item">
+            <div class="recipe-info">
+              <button
+                class="favorite-toggle"
+                @click="toggleFavorite(recipe)"
+                :class="{ 'is-favorite': recipe.isFavorite }"
+              >
+                ★
+              </button>
+              <p>{{ recipe.name }}</p>
+            </div>
+            <!-- Recipe action buttons -->
+            <button class="share-button" @click.stop="openShareModal(recipe.id)">
+              Teilen
             </button>
-            <p>{{ recipe.name }}</p>
+            <button class="delete-button" @click.stop="deleteRecipe(recipe)">
+              ✕
+            </button>
           </div>
-          <!-- Recipe action buttons -->
-          <button class="share-button" @click.stop="openShareModal(recipe.id)">
-            Teilen
-          </button>
-          <button class="delete-button" @click.stop="deleteRecipe(recipe)">
-            ✕
-          </button>
-        </div>
-      </li>
-    </ul>
-
+        </li>
+      </ul>
+    </div>
+ 
     <!-- Modal components -->
     <CreateRecipeView
       ref="createRecipeModal"
@@ -85,7 +89,7 @@
     <ShareRecipeModal ref="shareRecipeModal" />
     <DeleteConfirmationModal ref="deleteConfirmationModal" @confirm="handleDeleteConfirm" />
   </div>
- </template>
+</template>
 
 <script setup>
   import { ref, computed, onMounted } from 'vue';
@@ -284,14 +288,43 @@
 </script>
 
 <style scoped>
-  .sidebar {
-    width: 300px;
-    background-color: #1f1f1f;
-    padding: 20px;
-    border-radius: 8px;
-    border: 1px solid #fff;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  }
+.sidebar {
+  width: 300px;
+  background-color: #1f1f1f;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-fixed {
+  flex-shrink: 0;
+}
+
+.recipe-list-container {
+  flex-grow: 1;
+  overflow-y: auto;
+  margin-top: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: #4a4a4a #1f1f1f;
+}
+
+.recipe-list-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.recipe-list-container::-webkit-scrollbar-track {
+  background: #1f1f1f;
+}
+
+.recipe-list-container::-webkit-scrollbar-thumb {
+  background-color: #4a4a4a;
+  border-radius: 4px;
+}
 
   .sidebar-header {
     font-weight: bold;
