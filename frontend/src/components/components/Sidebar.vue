@@ -69,13 +69,14 @@
               </button>
               <p>{{ recipe.name }}</p>
             </div>
-            <!-- Recipe action buttons -->
-            <button class="share-button" @click.stop="openShareModal(recipe.id)">
-              Teilen
-            </button>
-            <button class="delete-button" @click.stop="deleteRecipe(recipe)">
-              ✕
-            </button>
+            <div class="recipe-actions">
+              <button class="share-button" @click.stop="openShareModal(recipe.id)">
+                Teilen
+              </button>
+              <button class="delete-button" @click.stop="deleteRecipe(recipe)">
+                ✕
+              </button>
+            </div>
           </div>
         </li>
       </ul>
@@ -288,9 +289,6 @@
 </script>
 
 <style scoped>
-
-
-
 .sidebar {
   width: 300px;
   background-color: #1f1f1f;
@@ -329,172 +327,190 @@
   border-radius: 4px;
 }
 
-  .sidebar-header {
-    font-weight: bold;
-    font-size: 20px;
-    text-align: center;
-    color: white;
-    margin-bottom: 15px;
-    text-transform: uppercase;
-  }
+.sidebar-header {
+  font-weight: bold;
+  font-size: 20px;
+  text-align: center;
+  color: white;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+}
 
-  .diet-filter {
-    margin-top: 20px;
-    margin-bottom: 20px;
-    padding: 10px;
-    background-color: #181818;
-    border-radius: 6px;
-    border: 1px solid #fff;
-    color: white;
-  }
+.diet-filter {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: #181818;
+  border-radius: 6px;
+  border: 1px solid #fff;
+  color: white;
+}
 
-  .diet-filter label {
-    display: block;
-    margin-bottom: 10px;
-    font-size: 14px;
-  }
+.diet-filter label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
 
-  .diet-filter input[type="checkbox"] {
-    margin-right: 8px;
-  }
+.diet-filter input[type="checkbox"] {
+  margin-right: 8px;
+}
 
-  .action-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin: 20px 0;
-  }
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 20px 0;
+}
 
-  .create-recipe-button {
-    width: 100%;
-    padding: 10px;
-    font-size: 16px;
-    color: white;
-    background-color: #4CAF50;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-  }
+.create-recipe-button {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  color: white;
+  background-color: #4CAF50;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
 
-  .create-recipe-button:hover {
-    background-color: #45a049;
-  }
+.create-recipe-button:hover {
+  background-color: #45a049;
+}
 
-  .favorites-button {
-    width: 100%;
-    padding: 10px;
-    font-size: 16px;
-    color: white;
-    background-color: #FFA000;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
+.favorites-button {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  color: white;
+  background-color: #FFA000;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
 
-  .favorites-button:hover {
-    background-color: #FF8F00;
-  }
+.favorites-button:hover {
+  background-color: #FF8F00;
+}
 
-  .favorites-button.active {
-    background-color: #FF6F00;
-  }
+.favorites-button.active {
+  background-color: #FF6F00;
+}
 
-  .star-icon {
-    font-size: 18px;
-  }
+.star-icon {
+  font-size: 18px;
+}
 
-  .recipe-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
+.recipe-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
 
-  .recipe-list li {
-    margin: 10px 0;
-    padding: 10px;
-    background-color: #181818;
-    border-radius: 6px;
-    border: 1px solid #fff;
-    color: white;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-  }
+.recipe-list li {
+  margin: 10px 0;
+  padding: 10px;
+  background-color: #181818;
+  border-radius: 6px;
+  border: 1px solid #fff;
+  color: white;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
 
-  .recipe-list li:hover {
-    background-color: rgba(24, 24, 24, 0.1);
-    transform: scale(1.02);
-  }
+.recipe-list li:hover {
+  background-color: rgba(24, 24, 24, 0.1);
+  transform: scale(1.02);
+}
 
-  .recipe-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-  }
+.recipe-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
 
-  .recipe-info {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
+.recipe-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
 
-  .favorite-toggle {
-    background: none;
-    border: none;
-    color: #ffffff;
-    font-size: 20px;
-    cursor: pointer;
-    padding: 0;
-    opacity: 0.5;
-    transition: opacity 0.2s ease;
-  }
+.recipe-info p {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+  min-width: 0;
+}
 
-  .favorite-toggle:hover {
-    opacity: 0.8;
-  }
+.recipe-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
 
-  .favorite-toggle.is-favorite {
-    opacity: 1;
-    color: #FFB300;
-  }
+.favorite-toggle {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+  flex-shrink: 0;
+}
 
-  .share-button {
-    background-color: #2196F3;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 4px 8px;
-    cursor: pointer;
-    font-size: 12px;
-    transition: background-color 0.2s ease;
-  }
+.favorite-toggle:hover {
+  opacity: 0.8;
+}
 
-  .share-button:hover {
-    background-color: #1976D2;
-  }
+.favorite-toggle.is-favorite {
+  opacity: 1;
+  color: #FFB300;
+}
 
-  .delete-button {
-    background-color: #000000;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 4px 8px;
-    cursor: pointer;
-    font-size: 12px;
-    transition: background-color 0.2s ease;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+.share-button {
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s ease;
+}
 
-  .delete-button:hover {
-    background-color: #c82333;
-  }
+.share-button:hover {
+  background-color: #1976D2;
+}
+
+.delete-button {
+  background-color: #000000;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s ease;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-button:hover {
+  background-color: #c82333;
+}
 </style>
