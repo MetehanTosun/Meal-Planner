@@ -71,7 +71,7 @@
     weekStore.getShoppingList,
     startDate,
     endDate,
-    INGREDIENT_TYPES  // INGREDIENT_TYPES als zusätzlicher Parameter
+    INGREDIENT_TYPES  
   );
 
   pdf.download(`Einkaufszettel_${startDate.split('T')[0]}.pdf`);

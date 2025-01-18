@@ -41,20 +41,18 @@ export const generateShoppingListPDF = (shoppingList, startDate, endDate) => {
       {
         table: {
           headerRows: 1,
-          // Hier fügen wir eine zusätzliche Spalte hinzu
           widths: ['*', '*', '*', '*'],
           body: [
             [
               { text: 'Zutat', style: 'tableHeader' },
               { text: 'Menge', style: 'tableHeader' },
               { text: 'Einheit', style: 'tableHeader' },
-              { text: 'Kategorie', style: 'tableHeader' }  // Neue Spalte
+              { text: 'Kategorie', style: 'tableHeader' }  
             ],
             ...shoppingList.map(item => [
               item.name,
               { text: item.amount.toString(), alignment: 'right' },
               item.unit,
-              // Neue Kategorie-Spalte mit Wert
               { 
                 text: INGREDIENT_TYPES[item.ingredientType]?.label || 'Keine Kategorie',
                 fillColor: INGREDIENT_TYPES[item.ingredientType]?.color || INGREDIENT_TYPES.NONE.color
