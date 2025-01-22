@@ -31,6 +31,15 @@
           />
           Vegan
         </label>
+        <label>
+          <input
+            type="checkbox"
+            value="MEAT"
+            v-model="dietFilter"
+            @change="applyDietFilter"
+          />
+          Fleisch
+        </label>
       </div>
  
       <!-- Action buttons for creating recipes and showing favorites -->
