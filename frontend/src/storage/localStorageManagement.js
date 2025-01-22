@@ -3,7 +3,9 @@
  Description: This file is used in all vue components to
  dynamically change the design once logged in and enable functionality.
 */
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+
+export const authenticatedBoolean = ref(false)
 
 const USER_STORAGE_KEY = 'userId'
 
@@ -13,9 +15,11 @@ export const getUserId = () => {
 
 export const setUserId = (userId) => {
   localStorage.setItem(USER_STORAGE_KEY, userId)
+  authenticatedBoolean.value = true
 };
 export const clearUserId = () => {
   localStorage.removeItem(USER_STORAGE_KEY)
+  authenticatedBoolean.value = false
 };
 export const isAuthenticated= computed(() => {
   return localStorage.getItem('userId') !== null

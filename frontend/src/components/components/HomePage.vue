@@ -1,10 +1,14 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
 import { mockRecipes } from '@/classes/MockRecipe'
 import Sidebar from '@/components/components/Sidebar.vue'
 import Workspace from '@/components/components/Workspace.vue'
 import Topbar from '@/components/components/Topbar.vue'
+import { authenticatedBoolean } from '@/storage/localStorageManagement'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const filteredRecipes = ref(mockRecipes)
 
@@ -12,6 +16,16 @@ function updateFilteredRecipes(newFilteredRecipes) {
   console.log('Updating filtered recipes:', newFilteredRecipes)
   filteredRecipes.value = newFilteredRecipes
 }
+
+const navigateToLogin = () => {
+  router.push('/login')
+}
+
+onMounted(() => {
+  if(!authenticatedBoolean.value){
+    navigateToLogin()
+  }
+})
 </script>
 
 <template>
