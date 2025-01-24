@@ -5,7 +5,7 @@ import { mockRecipes } from '@/classes/MockRecipe'
 import Sidebar from '@/components/components/Sidebar.vue'
 import Workspace from '@/components/components/Workspace.vue'
 import Topbar from '@/components/components/Topbar.vue'
-import { authenticatedBoolean } from '@/storage/localStorageManagement'
+import {authenticatedBoolean, getUserId} from '@/storage/localStorageManagement'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -22,6 +22,9 @@ const navigateToLogin = () => {
 }
 
 onMounted(() => {
+
+  authenticatedBoolean.value = !!getUserId()
+
   if(!authenticatedBoolean.value){
     navigateToLogin()
   }

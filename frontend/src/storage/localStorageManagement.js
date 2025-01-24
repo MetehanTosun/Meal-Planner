@@ -25,3 +25,4 @@ export const isAuthenticated= computed(() => {
   return localStorage.getItem('userId') !== null
 });
 
+authenticatedBoolean.value = !!getUserId()
