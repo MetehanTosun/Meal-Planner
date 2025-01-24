@@ -125,6 +125,7 @@ const handleDrop = async (event, dayId) => {
       } else {
         await weekStore.addRecipeToDay(dayId, recipe.id, 1);
       }
+      weekStore.fetchWeeksInRange(2);
     } catch (error) {
       console.error('Error adding/updating recipe:', error);
     }
@@ -159,10 +160,6 @@ onMounted(async () => {
   await weekStore.fetchWeeksInRange(2);
   await weekStore.handleWeekTransition();
 });
-
-//onUpdated(async () =>{
- // weekStore.fetchWeeksInRange(2);
-//})
 
 const closePopup = () => {
   showPopup.value = false;
