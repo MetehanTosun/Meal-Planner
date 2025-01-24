@@ -28,7 +28,8 @@ export const useWeekStore = defineStore('week', {
      */
     async fetchWeeksInRange(count = 2) {
       try {
-        if(!getUserId){
+        const userId = getUserId();
+        if(!userId){
           console.debug("No user logged in, skipping week fetch");
           return;
         }
@@ -212,6 +213,12 @@ export const useWeekStore = defineStore('week', {
       }
     },
     async handleWeekTransition() {
+
+      const userId = getUserId();
+      if(!userId){
+        console.debug("No user logged in, skipping week transition");
+        return;
+      }
       const today = new Date();
 
       // Get the end date of the last week in the current range
