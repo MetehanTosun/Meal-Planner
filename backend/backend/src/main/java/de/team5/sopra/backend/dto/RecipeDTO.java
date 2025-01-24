@@ -14,6 +14,7 @@ public class RecipeDTO {
     private int time;
     private FoodType foodtype;
     private List<Ingredient> ingredients;
+    private List<String> instructions;
     private Long creatorId;
     private boolean deleted;
     private boolean isFavorite;
@@ -27,6 +28,7 @@ public class RecipeDTO {
         dto.setIngredients(recipe.getIngredients());
         dto.setCreatorId(recipe.getUser().getId());
         dto.setDeleted(recipe.isDeleted());
+        dto.setInstructions(recipe.getInstructions());
         dto.setFavorite(recipe.isFavoriteByUser(recipe.getUser().getId()));
         return dto;
     }
