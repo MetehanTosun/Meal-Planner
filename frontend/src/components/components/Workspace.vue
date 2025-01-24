@@ -93,7 +93,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import {ref, onMounted, onUpdated} from 'vue'
 import { useWeekStore } from '@/state-management/index.js';
 import ReactiveDashboard from '@/components/components/Dashboards/ReactiveDashboardPlanner.vue';
 import RecipeDataPopup from '@/components/components/RecipeDataPopup.vue'
@@ -159,6 +159,10 @@ onMounted(async () => {
   await weekStore.fetchWeeksInRange(2);
   await weekStore.handleWeekTransition();
 });
+
+onUpdated(async () =>{
+  weekStore.fetchWeeksInRange(2);
+})
 
 const closePopup = () => {
   showPopup.value = false;
