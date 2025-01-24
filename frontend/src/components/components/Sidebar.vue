@@ -145,20 +145,22 @@
    * - Updates the reactive recipes array with the processed data
    * - Sets empty array if the fetch fails
    */
-  const fetchRecipes = async () => {
-    try {
-      const userId = localStorage.getItem('userId');
-      const response = await axios.get('/recipes');
-      recipes.value = response.data.map(recipe => ({
-        ...recipe,
-        isFavorite: recipe.favoriteByUsers.includes(parseInt(userId))
-      }));
-    } catch (error) {
-      console.error('Error fetching recipes:', error);
-      recipes.value = [];
+   const fetchRecipes = async () => {
+  try {
+    if (!localStorage.getItem('userId')) {
+      console.debug('No user logged in, skipping recipe fetch');
+      return;
     }
-  };
-
+    const userId = localStorage.getItem('userId');
+    const response = await axios.get('/recipes');
+    recipes.value = response.data.map(recipe => ({
+      ...recipe,
+      isFavorite: recipe.favoriteByUsers.includes(parseInt(userId))
+    }));
+  } catch (error) {
+    console.debug('Error fetching recipes:', error);
+  }
+};
   /**
    * Toggle the favorites filter
    */
@@ -243,9 +245,12 @@
    * Open create recipe modal
    */
   const openCreateRecipe = () => {
+    if (!localStorage.getItem('userId')) {
+      alert('Bitte melden Sie sich an, um ein Rezept zu erstellen');
+      return;
+    }
     createRecipeModal.value.showModal = true;
   };
-
   /**
    * Handle recipe created event
    */

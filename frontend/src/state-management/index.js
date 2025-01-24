@@ -28,6 +28,11 @@ export const useWeekStore = defineStore('week', {
      */
     async fetchWeeksInRange(count = 2) {
       try {
+        if(!getUserId){
+          console.debug("No user logged in, skipping week fetch");
+          return;
+        }
+
         console.log('--- Fetching Weeks in Range ---');
         console.log(`Current Week Index Before Fetch: ${this.currentWeekIndex}`);
         console.log(`Requested Count: ${count}`);
