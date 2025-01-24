@@ -6,10 +6,10 @@
       <div class="sidebar-header">
         <p>Rezepte</p>
       </div>
- 
+
       <!-- Search bar -->
       <SearchbarComponent @update:search="applySearchQuery" />
- 
+
       <!-- Dietary preference filters -->
       <div class="diet-filter">
         <p>Filter:</p>
@@ -32,7 +32,7 @@
           Vegan
         </label>
       </div>
- 
+
       <!-- Action buttons for creating recipes and showing favorites -->
       <div class="action-buttons">
         <button class="create-recipe-button" @click="openCreateRecipe">
@@ -80,7 +80,7 @@
         </li>
       </ul>
     </div>
- 
+
     <!-- Modal components -->
     <CreateRecipeView
       ref="createRecipeModal"
@@ -288,43 +288,43 @@
 </script>
 
 <style scoped>
-.sidebar {
-  width: 300px;
-  background-color: #1f1f1f;
-  padding: 20px;
-  border-radius: 8px;
-  border: 1px solid #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
+  .sidebar {
+    width: 300px;
+    background-color: #1f1f1f;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
 
-.sidebar-fixed {
-  flex-shrink: 0;
-}
+  .sidebar-fixed {
+    flex-shrink: 0;
+  }
 
-.recipe-list-container {
-  flex-grow: 1;
-  overflow-y: auto;
-  margin-top: 20px;
-  scrollbar-width: thin;
-  scrollbar-color: #4a4a4a #1f1f1f;
-}
+  .recipe-list-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin-top: 20px;
+    scrollbar-width: thin;
+    scrollbar-color: #4a4a4a #1f1f1f;
+  }
 
-.recipe-list-container::-webkit-scrollbar {
-  width: 8px;
-}
+  .recipe-list-container::-webkit-scrollbar {
+    width: 8px;
+  }
 
-.recipe-list-container::-webkit-scrollbar-track {
-  background: #1f1f1f;
-}
+  .recipe-list-container::-webkit-scrollbar-track {
+    background: #1f1f1f;
+  }
 
-.recipe-list-container::-webkit-scrollbar-thumb {
-  background-color: #4a4a4a;
-  border-radius: 4px;
-}
+  .recipe-list-container::-webkit-scrollbar-thumb {
+    background-color: #4a4a4a;
+    border-radius: 4px;
+  }
 
   .sidebar-header {
     font-weight: bold;
@@ -429,15 +429,26 @@
 
   .recipe-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 1rem;
+    gap: 8px;
+    width: 100%;
   }
 
   .recipe-info {
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .recipe-info p {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    width: 100%;
+    margin: 0;
   }
 
   .favorite-toggle {
@@ -469,6 +480,8 @@
     cursor: pointer;
     font-size: 12px;
     transition: background-color 0.2s ease;
+    flex-shrink: 0;
+    min-width: 60px;
   }
 
   .share-button:hover {
@@ -489,6 +502,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
   }
 
   .delete-button:hover {
