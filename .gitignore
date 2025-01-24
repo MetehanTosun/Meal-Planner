@@ -9,3 +9,6 @@ backend/backend/src/test.http
 /tests/node_modules/
 /node_modules/
 .vscode/
+
+# Ignore build artifacts
+/target/
