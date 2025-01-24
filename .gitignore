@@ -8,3 +8,4 @@ backend/backend/src/test.http
 .idea/
 /tests/node_modules/
 /node_modules/
+.vscode/

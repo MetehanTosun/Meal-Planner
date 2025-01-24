@@ -52,6 +52,12 @@
                 </div>
                 <div class="action-buttons">
                   <span
+                    class="informationTab"
+                    @click="incrementPortions(recipe)"
+                  >
+                    <p>+</p>
+                  </span>
+                  <span
                     class="portionsDisplay"
                     @click="decrementPortions(recipe)"
                   >
@@ -140,6 +146,14 @@ const decrementPortions = async (recipe) => {
     console.error('Error decrementing portions:', error);
   }
 };
+
+const incrementPortions = async (recipe) => {
+  try {
+    await weekStore.incrementRecipePortions(recipe.id)
+  }catch (error){
+    console.error('Error incrementing portions:', error);
+  }
+}
 
 onMounted(async () => {
   await weekStore.fetchWeeksInRange(2);

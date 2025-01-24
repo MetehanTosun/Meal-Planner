@@ -17,13 +17,22 @@ cd <repository-folder>
 ```
 ## Frontend
  The frontend for the web application is in the /frontend directory
+
+### 1. Install Frontend Dependencies
+```bash
+npm install
+```
+### 2. Start/Run Frontend Application
+```bash
+npm run dev
+```
 ## Backend
 
 The backend is in the /backend/backend directory
 
 ### 2. Build the project
 ```bash
-mvn clean install
+mvn clean install -DskipTest
 ```
 
 ### 3. Run the application
