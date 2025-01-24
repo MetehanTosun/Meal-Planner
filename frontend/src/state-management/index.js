@@ -40,6 +40,9 @@ export const useWeekStore = defineStore('week', {
             days: week.days.map(day => ({
               ...day,
               isPast: isDayPast(day.date),
+              userSpecificRecipes: day.userSpecificRecipes.filter(
+                recipe => recipe.recipeData && !recipe.recipeData.deleted
+              ),
             })),
           }));
 
@@ -257,10 +260,10 @@ export const useWeekStore = defineStore('week', {
     /**
      * Get all recipes for a specific day by its ID.
      */
-    getRecipesForDay: (state) => (dayId) => {
-      const day = state.weeks[state.currentWeekIndex]?.days.find((d) => d.id === dayId);
-      return day ? day.userSpecificRecipes || [] : [];
-    },
+    //getRecipesForDay: (state) => (dayId) => {
+    //  const day = state.weeks[state.currentWeekIndex]?.days.find((d) => d.id === dayId);
+    //  return day ? day.userSpecificRecipes || [] : [];
+    //},
     getShoppingList(state) {
       // Get days from current week, or empty array if no data exists
       const days = state.weeks[state.currentWeekIndex]?.days || [];
@@ -314,6 +317,14 @@ export const useWeekStore = defineStore('week', {
       const currentWeek = state.weeks[state.currentWeekIndex];
       if (!currentWeek || !currentWeek.days || currentWeek.days.length === 0) return null;
       return currentWeek.days[currentWeek.days.length - 1].date;
-    }
+    },
+    getRecipesForDay: (state) => (dayId) => {
+      const day = state.weeks[state.currentWeekIndex]?.days.find((d) => d.id === dayId);
+      if (!day) return [];
+
+      // Filter out recipes where `deleted` is true
+      return day.userSpecificRecipes.filter(recipe => !recipe.recipeData.deleted);
+    },
+
   },
 });

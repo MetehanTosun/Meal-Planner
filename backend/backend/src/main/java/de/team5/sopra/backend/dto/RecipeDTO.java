@@ -15,6 +15,7 @@ public class RecipeDTO {
     private FoodType foodtype;
     private List<Ingredient> ingredients;
     private Long creatorId;
+    private boolean deleted;
     private boolean isFavorite;
 
     public static RecipeDTO fromRecipe(Recipe recipe) {
@@ -25,6 +26,7 @@ public class RecipeDTO {
         dto.setFoodtype(recipe.getFoodType());
         dto.setIngredients(recipe.getIngredients());
         dto.setCreatorId(recipe.getUser().getId());
+        dto.setDeleted(recipe.isDeleted());
         dto.setFavorite(recipe.isFavoriteByUser(recipe.getUser().getId()));
         return dto;
     }

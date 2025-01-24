@@ -8,6 +8,7 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import de.team5.sopra.backend.models.enums.FoodType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
@@ -56,7 +57,7 @@ public class Recipe {
     @Enumerated(EnumType.STRING)
     private FoodType foodtype;
 
-    @Column(nullable = false)
+    @Column(name = "deleted",nullable = false)
     private boolean deleted = false;
 
     @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -115,6 +116,7 @@ public class Recipe {
         return this.favoriteByUsers.contains(userId);
     }
 
+    @JsonProperty("deleted")
     public boolean isDeleted() {
         return deleted;
     }

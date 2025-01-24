@@ -10,7 +10,7 @@ const changeTo = (value) => {
   } else if (value === "shoppingList") {
     router.push({ name: "shoppingList" });
   } else if (value === "dashboard") {
-    router.push({ name: "dashboard" });
+    router.push({ name: "home" });
   }
 };
 
