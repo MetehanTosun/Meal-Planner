@@ -32,10 +32,9 @@
       </p>
       <p class="popup-detail">
         <strong>Typ:</strong>
-        <span v-if="recipe.recipeData.foodtype=== VEGETARIAN"> Vegetarisch</span>
-        <span v-else-if="recipe.recipeData.foodtype=== VEGAN"> Vegan</span>
-        <span v-else-if="recipe.recipeData.foodtype=== MEAT"> Enthält Fleisch</span>
-
+        <span v-if="recipe.recipeData.foodType === VEGETARIAN"> Vegetarisch</span>
+        <span v-else-if="recipe.recipeData.foodType === VEGAN"> Vegan</span>
+        <span v-else-if="recipe.recipeData.foodType === MEAT"> Enthält Fleisch</span>
       </p>
       <h4 class="popup-subtitle">Zutaten:</h4>
       <ul class="popup-ingredients">
@@ -45,11 +44,20 @@
         >
           <b>{{ ingredient.name }}</b> :
           <span v-if="ingredient.unit === 'G'">{{ ingredient.amount }} Gramm</span>
-          <span v-else-if="ingredient.unit === 'ML'">{{ ingredient.amount }} Milliliters</span>
+          <span v-else-if="ingredient.unit === 'ML'">{{ ingredient.amount }} Milliliter</span>
           <span v-else-if="ingredient.unit === 'STÜCK'">{{ ingredient.amount }} Stück</span>
           <span v-else>{{ ingredient.amount }} {{ ingredient.unit }}</span>
         </li>
       </ul>
+      <h4 class="popup-subtitle">Zubereitungsschritte:</h4>
+      <ol class="popup-steps">
+        <li
+          v-for="(step, index) in recipe.recipeData.instructions"
+          :key="index"
+        >
+          {{ step }}
+        </li>
+      </ol>
     </div>
   </div>
 </template>
@@ -106,6 +114,18 @@
 }
 
 .popup-ingredients li {
+  margin: 5px 0;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.popup-steps {
+  list-style-type: decimal;
+  padding-left: 20px;
+  margin: 0;
+}
+
+.popup-steps li {
   margin: 5px 0;
   font-size: 0.95rem;
   color: #555;
