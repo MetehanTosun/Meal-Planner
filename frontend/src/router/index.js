@@ -4,6 +4,7 @@ import HomePage from '@/components/components/HomePage.vue'
 import RegisterPage from '@/components/components/RegisterPage.vue'
 import UserStatistics from '@/components/components/UserStatistics.vue'
 import ShoppingList from '@/components/components/ShoppingList.vue'
+import History from "@/components/components/History.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -32,6 +33,11 @@ const router = createRouter({
       path: '/shopping-list',
       name: 'shoppingList',
       component: ShoppingList,
+    },
+    {
+      path: '/history',
+      name: 'history',
+      component: History,
     },
   ],
 })

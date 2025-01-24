@@ -6,6 +6,8 @@ const changeTo = (value) => {
     router.push({ name: 'statistics' })
   } else if (value === 'shoppingList') {
     router.push({ name: 'shoppingList' })
+  } else if (value === 'history'){
+    router.push({ name: 'history'})
   }
 }
 </script>
@@ -16,6 +18,7 @@ const changeTo = (value) => {
       <ul class="nav">
         <li class="nav-item" @click="changeTo('statistics')">Statistiken</li>
         <li class="nav-item" @click="changeTo('shoppingList')">Einkaufszettel</li>
+        <li class="nav-item" @click="changeTo('history')">Historie</li>
       </ul>
     </div>
   </div>
