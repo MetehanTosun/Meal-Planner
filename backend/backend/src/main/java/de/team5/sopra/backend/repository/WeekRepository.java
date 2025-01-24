@@ -16,5 +16,7 @@ public interface WeekRepository extends JpaRepository<Week, Long> {
 	List<Week> findByUserOrderByStartDateDesc(@Param("user") User user, Pageable pageable);
 
 	List<Week> findByUserId(Long userId);
+
+	List<Week> findByUser(User user);
 }
 

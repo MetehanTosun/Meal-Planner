@@ -44,6 +44,10 @@ public class RecipeService {
                 ));
     }
 
+    public List<Recipe> getAllNotDeletedByUser(User user) {
+        return recipeRepository.findByUserAndDeletedFalse(user);
+    }
+
     /**
      * Gibt die Ingredients eines Rezepts zurück.
      */
@@ -88,15 +92,12 @@ public class RecipeService {
         return recipeRepository.save(existing);
     }
 
-    /**
-     * Löscht ein Recipe samt Ingredients (wegen orphanRemoval=true)
-     */
     public void deleteRecipeById(Long id) {
-        if(!recipeRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found!");
-        }
-        getRecipeById(id);
-        recipeRepository.deleteById(id);
+        Recipe recipe = recipeRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found!"));
+
+        recipe.delete();
+        recipeRepository.save(recipe);
     }
 
     /**

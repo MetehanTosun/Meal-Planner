@@ -2,7 +2,9 @@ package de.team5.sopra.backend.controller;
 
 import de.team5.sopra.backend.dto.WeekRequest;
 import de.team5.sopra.backend.dto.WeeklyCreationDTO;
+import de.team5.sopra.backend.models.User;
 import de.team5.sopra.backend.models.Week;
+import de.team5.sopra.backend.service.UserService;
 import de.team5.sopra.backend.service.WeekService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +18,8 @@ public class WeekController {
 
 	@Autowired
 	private WeekService weekService;
-
+	@Autowired
+	private UserService userService;
 	@GetMapping
 	public ResponseEntity<List<Week>> getAllWeeks() {
 		List<Week> weeks = weekService.getAllWeeks();
@@ -91,6 +94,13 @@ public class WeekController {
 		} catch (IllegalArgumentException e) {
 			return ResponseEntity.badRequest().body(null);
 		}
+	}
+
+	@GetMapping("/user/{userId}")
+	public ResponseEntity<List<Week>> getWeeksForUser(@PathVariable Long userId) {
+		User user = userService.getUserById(userId);
+		List<Week> weeks = weekService.getWeeksByUser(user);
+		return ResponseEntity.ok(weeks);
 	}
 
 }

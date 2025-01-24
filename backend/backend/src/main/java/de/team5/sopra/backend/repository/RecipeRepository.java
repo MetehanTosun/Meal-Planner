@@ -3,10 +3,15 @@ package de.team5.sopra.backend.repository;
 import de.team5.sopra.backend.models.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import de.team5.sopra.backend.models.Recipe;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
 public interface RecipeRepository extends JpaRepository<Recipe, Long> {
     List<Recipe> findByUser(User user);
+
+    @Query("SELECT r FROM Recipe r WHERE r.user = :user AND r.deleted = false")
+    List<Recipe> findByUserAndDeletedFalse(@Param("user") User user);
 
 }

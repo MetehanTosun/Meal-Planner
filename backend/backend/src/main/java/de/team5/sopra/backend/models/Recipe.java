@@ -56,7 +56,8 @@ public class Recipe {
     @Enumerated(EnumType.STRING)
     private FoodType foodtype;
 
-
+    @Column(nullable = false)
+    private boolean deleted = false;
 
     @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("recipe-userSpecificRecipe")
@@ -112,5 +113,13 @@ public class Recipe {
 
     public boolean isFavoriteByUser(Long userId) {
         return this.favoriteByUsers.contains(userId);
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+    // Methode zum "Löschen" des Rezepts
+    public void delete() {
+        this.deleted = true;
     }
 }

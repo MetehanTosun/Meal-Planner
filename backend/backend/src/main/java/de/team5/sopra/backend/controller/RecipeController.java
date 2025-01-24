@@ -42,7 +42,7 @@ public class RecipeController {
 	@GetMapping
 	public List<Recipe> getAllRecipes(@RequestHeader("User-Id") Long userId) {
 		User currentUser = userService.getUserById(userId);
-		return recipeService.getAllRecipesByUser(currentUser);
+		return recipeService.getAllNotDeletedByUser(currentUser);
 	}
 
 	/**

@@ -1,6 +1,8 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
+import axios from "axios";
 import router from "@/router/index.js";
+import { getUserId } from "@/storage/localStorageManagement.js"
 
 const changeTo = (value) => {
   if (value === "statistics") {
@@ -8,154 +10,50 @@ const changeTo = (value) => {
   } else if (value === "shoppingList") {
     router.push({ name: "shoppingList" });
   } else if (value === "dashboard") {
-    router.push({ name:"dashboard"})
+    router.push({ name: "dashboard" });
   }
 };
-const weeks = ref([
-  {
-    id: 1,
-    startDate: "2023-01-01",
-    endDate: "2023-01-07",
-    days: [
-      {
-        id: 101,
-        date: "2023-01-01",
-        userSpecificRecipes: [
-          { id: 1, name: "Spaghetti Carbonara", portions: 2 },
-          { id: 2, name: "Caesar Salad", portions: 1 },
-          { id: 3, name: "Pancakes", portions: 3 },
-          { id: 3, name: "Kuchen", portions: 4 },
-        ],
-      },
-      {
-        id: 102,
-        date: "2023-01-02",
-        userSpecificRecipes: [
-          { id: 3, name: "Pancakes", portions: 3 },
-        ],
-      },
-      {
-        id: 102,
-        date: "2023-01-03",
-        userSpecificRecipes: [
-          { id: 3, name: "Pancakes", portions: 3 },
-        ],
-      },
-      {
-        id: 102,
-        date: "2023-01-04",
-        userSpecificRecipes: [
-          { id: 3, name: "Pancakes", portions: 3 },
-        ],
-      },
-      {
-        id: 102,
-        date: "2023-01-05",
-        userSpecificRecipes: [
-          { id: 3, name: "Pancakes", portions: 3 },
-        ],
-      },
-      {
-        id: 102,
-        date: "2023-01-06",
-        userSpecificRecipes: [
-          { id: 3, name: "Pancakes", portions: 3 },
-        ],
-      },
-      {
-        id: 102,
-        date: "2023-01-07",
-        userSpecificRecipes: [
-          { id: 3, name: "Pancakes", portions: 3 },
-        ],
-      },
-    ],
-  },
-  {
-    id: 2,
-    startDate: "2023-01-08",
-    endDate: "2023-01-14",
-    days: [
-      {
-        id: 103,
-        date: "2023-01-08",
-        userSpecificRecipes: [
-          { id: 4, name: "Pizza Margherita", portions: 1 },
-        ],
-      },
 
-    ],
-  },
-  {
-    id: 3,
-    startDate: "2023-01-15",
-    endDate: "2023-01-22",
-    days: [
-      {
-        id: 103,
-        date: "2023-01-08",
-        userSpecificRecipes: [
-          { id: 4, name: "Pizza Margherita", portions: 1 },
-        ],
-      },
+const weeks = ref([]);
 
-    ],
-  },
-  {
-    id: 4,
-    startDate: "2023-01-15",
-    endDate: "2023-01-22",
-    days: [
-      {
-        id: 103,
-        date: "2023-01-08",
-        userSpecificRecipes: [
-          { id: 4, name: "Pizza Margherita Fdsgkansgojnasgjidnasjdognasiudgbasuigdb", portions: 1 },
-        ],
-      },
-
-    ],
-  },
-  {
-    id: 5,
-    startDate: "2023-01-15",
-    endDate: "2023-01-22",
-    days: [
-      {
-        id: 103,
-        date: "2023-01-08",
-        userSpecificRecipes: [
-          { id: 4, name: "Pizza Margherita", portions: 1 },
-        ],
-      },
-
-    ],
-  },
-]);
+const fetchWeeks = async () => {
+  try {
+    const userId = getUserId();
+    const response = await axios.get(`http://localhost:8080/weeks/user/${userId}`);
+    weeks.value = response.data;
+  } catch (error) {
+    console.error("Fehler beim Laden der Wochen:", error);
+  }
+};
 
 const formatDate = (date) => {
   const options = { year: "numeric", month: "long", day: "numeric" };
   return new Date(date).toLocaleDateString("de-DE", options);
 };
-</script>
 
+onMounted(fetchWeeks);
+</script>
 
 <template>
   <div class="weeks-dashboard-container">
-    <!-- Scrollbarer Bereich für Wochen -->
+
     <div class="weeks-container">
       <h1>Wochenübersicht</h1>
 
       <div class="week" v-for="week in weeks" :key="week.id">
         <h2>Woche vom {{ formatDate(week.startDate) }} bis {{ formatDate(week.endDate) }}</h2>
 
-        <!-- Tage in der Woche -->
+
         <div class="days-container">
           <div class="day" v-for="day in week.days" :key="day.id">
             <h3>{{ formatDate(day.date) }}</h3>
             <ul class="recipes">
               <li v-for="recipe in day.userSpecificRecipes" :key="recipe.id">
-                {{ recipe.name }} | Portionen: {{ recipe.portions }}
+                <strong>{{ recipe.recipeData.name }}</strong> | Portionen: {{ recipe.portions }}
+              </li>
+
+              <li v-if="day.userSpecificRecipes.length === 0" class="no-recipes">
+                Keine Rezepte für diesen Tag
               </li>
             </ul>
           </div>
@@ -173,7 +71,6 @@ const formatDate = (date) => {
     </div>
   </div>
 </template>
-
 
 <style scoped>
 .weeks-dashboard-container {
@@ -234,10 +131,15 @@ const formatDate = (date) => {
   padding: 0.5rem;
   border-radius: 4px;
   text-align: center;
-  width: 100%;
   word-wrap: break-word;
   word-break: break-word;
-  box-sizing: border-box;
+}
+
+.no-recipes {
+  background-color: transparent;
+  color: #ccc;
+  text-align: center;
+  font-style: italic;
 }
 
 .day h3 {
@@ -245,8 +147,6 @@ const formatDate = (date) => {
   padding: 0.5rem;
   margin: 0 0 1rem 0;
   text-align: center;
-  background-color: transparent;
-  width: 100%;
 }
 
 .dashboard {
@@ -283,7 +183,3 @@ const formatDate = (date) => {
   cursor: pointer;
 }
 </style>
-
-
-
-

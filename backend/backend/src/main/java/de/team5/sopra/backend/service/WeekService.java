@@ -179,4 +179,8 @@ public class WeekService {
 
 		return weekRepository.save(newWeek);
 	}
+
+	public List<Week> getWeeksByUser(User user) {
+		return weekRepository.findByUser(user);
+	}
 }
