@@ -160,9 +160,9 @@ onMounted(async () => {
   await weekStore.handleWeekTransition();
 });
 
-onUpdated(async () =>{
-  weekStore.fetchWeeksInRange(2);
-})
+//onUpdated(async () =>{
+ // weekStore.fetchWeeksInRange(2);
+//})
 
 const closePopup = () => {
   showPopup.value = false;
@@ -171,7 +171,7 @@ const closePopup = () => {
 const openRecipeInfo = (userSpecificRecipe) => {
   selectedRecipe.value = userSpecificRecipe;
   console.log('Currently this USR is selected',userSpecificRecipe.id);
-  console.log(userSpecificRecipe.recipeData.foodType);
+  console.log(userSpecificRecipe.recipeData.foodtype);
   showPopup.value = true;
 };
 </script>

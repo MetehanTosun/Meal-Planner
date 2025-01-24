@@ -32,9 +32,9 @@
       </p>
       <p class="popup-detail">
         <strong>Typ:</strong>
-        <span v-if="recipe.recipeData.foodType === VEGETARIAN"> Vegetarisch</span>
-        <span v-else-if="recipe.recipeData.foodType === VEGAN"> Vegan</span>
-        <span v-else-if="recipe.recipeData.foodType === MEAT"> Enthält Fleisch</span>
+        <span v-if="recipe.recipeData.foodtype === VEGETARIAN"> Vegetarisch</span>
+        <span v-else-if="recipe.recipeData.foodtype === VEGAN"> Vegan</span>
+        <span v-else-if="recipe.recipeData.foodtype === MEAT"> Enthält Fleisch</span>
       </p>
       <h4 class="popup-subtitle">Zutaten:</h4>
       <ul class="popup-ingredients">
