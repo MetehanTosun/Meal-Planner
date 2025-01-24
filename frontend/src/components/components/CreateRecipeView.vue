@@ -1,41 +1,69 @@
 <template>
+  <!-- Main modal container -->
   <div v-if="showModal" class="modal-overlay">
     <div class="modal-content">
       <h2>Neues Rezept erstellen</h2>
-
-      <!-- Recipename -->
+ 
+      <!-- Recipe name input field -->
       <div class="form-group">
-        <label>Rezeptname:</label>
-        <input v-model="recipe.name" type="text" placeholder="Rezeptname eingeben">
+        <label>Rezeptname: *</label>
+        <input 
+          v-model="recipe.name" 
+          type="text" 
+          placeholder="Rezeptname eingeben"
+          :class="{ 'error': validationErrors.name }"
+        >
       </div>
-
-      <!-- Prepare time -->
+ 
+      <!-- Preparation time input -->
       <div class="form-group">
-        <label>Zubereitungszeit (Minuten):</label>
-        <input v-model="recipe.time" type="number" min="1">
+        <label>Zubereitungszeit (Minuten): *</label>
+        <input 
+          v-model="recipe.time" 
+          type="number" 
+          min="1"
+          :class="{ 'error': validationErrors.time }"
+        >
       </div>
-
-      <!-- Ingredients -->
+ 
+      <!-- Dynamic ingredient rows -->
       <div v-for="(ingredient, index) in recipe.ingredients" :key="index" class="ingredient-row">
-  <input v-model="ingredient.name" type="text" placeholder="Zutat">
-  <input v-model="ingredient.amount" type="number" min="0" placeholder="Menge">
-  <select v-model="ingredient.unit">
-    <option value="G">Gramm</option>
-    <option value="ML">Milliliter</option>
-    <option value="STÜCK">Stück</option>
-  </select>
-  <select v-model="ingredient.ingredientType">
-    <option v-for="(type, key) in INGREDIENT_TYPES" 
-            :key="key"
-            :value="key">
-      {{ type.label }}
-    </option>
-  </select>
-  <button @click="removeIngredient(index)" class="remove-btn">-</button>
-</div>
-<button @click="addIngredient" class="add-btn">+ Zutat hinzufügen</button>
-
-      <!-- Instructions -->
+        <!-- Ingredient name -->
+        <input 
+          v-model="ingredient.name" 
+          type="text" 
+          placeholder="Zutat *"
+          :class="{ 'error': validationErrors.ingredients?.[index]?.name }">
+        <!-- Amount -->  
+        <input 
+          v-model="ingredient.amount" 
+          type="number" 
+          min="0" 
+          placeholder="Menge *"
+          :class="{ 'error': validationErrors.ingredients?.[index]?.amount }">
+        <!-- Unit selection -->
+        <select 
+          v-model="ingredient.unit"
+          :class="{ 'error': validationErrors.ingredients?.[index]?.unit }">
+          <option value="G">Gramm</option>
+          <option value="ML">Milliliter</option>
+          <option value="STÜCK">Stück</option>
+        </select>
+        <!-- Ingredient type -->
+        <select v-model="ingredient.ingredientType">
+          <option v-for="(type, key) in INGREDIENT_TYPES" 
+                  :key="key"
+                  :value="key">
+            {{ type.label }}
+          </option>
+        </select>
+        <!-- Remove button -->
+        <button @click="removeIngredient(index)" class="remove-btn">-</button>
+      </div>
+      <!-- Add new ingredient button -->
+      <button @click="addIngredient" class="add-btn">+ Zutat hinzufügen</button>
+ 
+      <!-- Instructions section -->
       <div class="instructions-section">
         <h3>Zubereitungsschritte</h3>
         <div v-for="(instruction, index) in recipe.instructions" :key="index" class="instruction-row">
@@ -45,34 +73,47 @@
         </div>
         <button @click="addInstruction" class="add-btn">+ Schritt hinzufügen</button>
       </div>
-
-      <!-- Foodtype -->
+ 
+      <!-- Food type selection -->
       <div class="form-group">
-        <label>Art des Gerichts:</label>
-        <select v-model="recipe.foodType">
+        <label>Art des Gerichts: *</label>
+        <select 
+          v-model="recipe.foodType"
+          :class="{ 'error': validationErrors.foodType }"
+        >
           <option value="VEGAN">Vegan</option>
           <option value="VEGETARIAN">Vegetarisch</option>
           <option value="MEAT">Fleisch</option>
         </select>
       </div>
-
-      <!-- Buttons -->
+ 
+      <!-- Error message display -->
+      <div v-if="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+ 
+      <!-- Action buttons -->
       <div class="modal-actions">
         <button @click="saveRecipe" class="save-btn">Speichern</button>
         <button @click="closeModal" class="cancel-btn">Abbrechen</button>
       </div>
     </div>
   </div>
-</template>
-
-<script setup>
-import { ref, reactive } from 'vue'
-import axios from '@/axios'
-import { INGREDIENT_TYPES } from '@/classes/IngredientTypes'
-
-const showModal = ref(false)
-const errorMessage = ref('')
-const recipe = reactive({
+ </template>
+ 
+ <script setup>
+ // Import required dependencies
+ import { ref, reactive } from 'vue'
+ import axios from '@/axios'
+ import { INGREDIENT_TYPES } from '@/classes/IngredientTypes'
+ 
+ // State management
+ const showModal = ref(false)
+ const errorMessage = ref('')
+ const validationErrors = reactive({})
+ 
+ // Initial recipe data structure
+ const recipe = reactive({
   name: '',
   time: null,
   ingredients: [
@@ -86,9 +127,10 @@ const recipe = reactive({
   ],
   instructions: [''],
   foodType: 'MEAT'
-})
-
-const addIngredient = () => {
+ })
+ 
+ // Add new ingredient
+ const addIngredient = () => {
   recipe.ingredients.push({
     name: '',
     amount: null,
@@ -96,109 +138,103 @@ const addIngredient = () => {
     foodType: 'MEAT',
     ingredientType: 'NONE'
   })
-}
-
-const removeIngredient = (index) => {
+ }
+ 
+ // Remove ingredient at index
+ const removeIngredient = (index) => {
   recipe.ingredients.splice(index, 1)
-}
-
-const addInstruction = () => {
+ }
+ 
+ // Add new instruction step
+ const addInstruction = () => {
   recipe.instructions.push('')
-}
-
-const removeInstruction = (index) => {
+ }
+ 
+ // Remove instruction at index
+ const removeInstruction = (index) => {
   recipe.instructions.splice(index, 1)
-}
-
-const validateRecipe = () => {
-  if (!recipe.name || recipe.name.trim() === '') {
-    throw new Error('Bitte geben Sie einen Rezeptnamen ein')
+ }
+ 
+ // Validate recipe data
+ const validateRecipe = () => {
+  validationErrors.value = {}
+  const errors = {}
+ 
+  // Check required fields
+  if (!recipe.name?.trim()) {
+    errors.name = true
   }
   if (!recipe.time || recipe.time <= 0) {
-    throw new Error('Bitte geben Sie eine gültige Zubereitungszeit ein')
-  }
-  if (!recipe.ingredients.length) {
-    throw new Error('Bitte fügen Sie mindestens eine Zutat hinzu')
-  }
-  for (const ingredient of recipe.ingredients) {
-    if (!ingredient.name || ingredient.name.trim() === '') {
-      throw new Error('Bitte geben Sie für alle Zutaten einen Namen ein')
-    }
-    if (!ingredient.amount || ingredient.amount <= 0) {
-      throw new Error('Bitte geben Sie für alle Zutaten eine gültige Menge ein')
-    }
-    if (!ingredient.unit) {
-      throw new Error('Bitte wählen Sie für alle Zutaten eine Einheit aus')
-    }
-    if (!ingredient.foodType) {
-      throw new Error('Bitte wählen Sie für alle Zutaten eine Art aus')
-    }
-  }
-  if (!recipe.instructions.length || !recipe.instructions.some(instruction => instruction.trim() !== '')) {
-    throw new Error('Bitte fügen Sie mindestens einen Zubereitungsschritt hinzu')
+    errors.time = true
   }
   if (!recipe.foodType) {
-    throw new Error('Bitte wählen Sie eine Art des Gerichts aus')
+    errors.foodType = true
   }
-}
-
-/**
-* Asynchronous function to save a new recipe
-* Validates the recipe data, sends it to the backend, and handles responses/errors
-*/
-const saveRecipe = async () => {
+ 
+  // Check ingredients if present
+  if (recipe.ingredients.length > 0) {
+    errors.ingredients = recipe.ingredients.map(ingredient => {
+      const ingredientErrors = {}
+      if (!ingredient.name?.trim()) ingredientErrors.name = true
+      if (!ingredient.amount || ingredient.amount < 0) ingredientErrors.amount = true
+      if (!ingredient.unit) ingredientErrors.unit = true
+      return Object.keys(ingredientErrors).length ? ingredientErrors : null
+    })
+    
+    if (errors.ingredients.every(error => error === null)) {
+      delete errors.ingredients
+    }
+  }
+ 
+  Object.assign(validationErrors, errors)
+  
+  if (Object.keys(errors).length) {
+    throw new Error('Bitte füllen Sie alle Pflichtfelder (*) aus')
+  }
+ }
+ 
+ // Save recipe to backend
+ const saveRecipe = async () => {
   try {
-    // Validate all recipe fields before sending
     validateRecipe()
-
-    // Prepare recipe object for backend submission
+ 
+    // Prepare data for API
     const recipeToSend = {
       name: recipe.name,
       time: parseInt(recipe.time),
       foodType: recipe.foodType,
-      // Map through ingredients array and transform data for backend format
-      ingredients: recipe.ingredients.map(ingredient => ({
-        name: ingredient.name,
-        amount: parseInt(ingredient.amount),
-        unit: ingredient.unit,
-        foodType: ingredient.foodType,
-        ingredientType: ingredient.ingredientType
-      })),
-      // Filter out empty instruction steps
-      instructions: recipe.instructions.filter(instruction => instruction.trim() !== '')
+      ingredients: recipe.ingredients
+        .filter(ingredient => ingredient.name.trim())
+        .map(ingredient => ({
+          name: ingredient.name,
+          amount: parseInt(ingredient.amount) || 0,
+          unit: ingredient.unit,
+          foodType: ingredient.foodType,
+          ingredientType: ingredient.ingredientType
+        })),
+      instructions: recipe.instructions.filter(instruction => instruction.trim())
     }
-
-    const response = await axios.post('/recipes', recipeToSend)
-    console.log('Recipe saved successfully:', response.data)
-
+ 
+    await axios.post('/recipes', recipeToSend)
     closeModal()
     emit('recipe-created')
-
   } catch (error) {
     console.error('Save recipe error:', error)
-
-    if (error.response?.status === 500) {
-      console.log('Recipe was saved despite error, closing modal')
-      closeModal()
-      emit('recipe-created')
-      return
-    }
-
-    if (error.response?.status === 401) {
-      alert('Bitte melden Sie sich erneut an.')
-      return
-    }
-
-    const errorMsg = error.response?.data?.message || error.message || 'Ein Fehler ist aufgetreten'
-    errorMessage.value = errorMsg
-    alert(errorMsg)
+    errorMessage.value = error.response?.data?.message || error.message
   }
-}
-
+ }
+ 
+ // Reset form and close modal
 const closeModal = () => {
   showModal.value = false
   errorMessage.value = ''
-  // Reset form
+  
+  // Reset validation errors
+  Object.keys(validationErrors).forEach(key => {
+    delete validationErrors[key]
+  })
+  
+  // Reset recipe data
   recipe.name = ''
   recipe.time = null
   recipe.ingredients = [{
@@ -211,19 +247,20 @@ const closeModal = () => {
   recipe.instructions = ['']
   recipe.foodType = 'MEAT'
 }
-
-// Event Emitter für Recipe Created Event
-const emit = defineEmits(['recipe-created'])
-
-// Expose necessary methods
-defineExpose({
+ 
+ // Event emitter setup
+ const emit = defineEmits(['recipe-created'])
+ 
+ // Expose required methods
+ defineExpose({
   showModal,
   closeModal
-})
-</script>
-
-<style scoped>
-.modal-overlay {
+ })
+ </script>
+ 
+ <style scoped>
+ /* Modal overlay styling */
+ .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -234,9 +271,10 @@ defineExpose({
   justify-content: center;
   align-items: center;
   z-index: 1000;
-}
-
-.modal-content {
+ }
+ 
+ /* Content container */
+ .modal-content {
   background: white;
   padding: 2rem;
   border-radius: 8px;
@@ -244,89 +282,106 @@ defineExpose({
   max-width: 600px;
   max-height: 80vh;
   overflow-y: auto;
-}
-
-.form-group {
+ }
+ 
+ /* Form group layout */
+ .form-group {
   margin-bottom: 1rem;
-}
-
-.form-group label {
+ }
+ 
+ .form-group label {
   display: block;
   margin-bottom: 0.5rem;
-}
-
-input, select {
+ }
+ 
+ /* Form controls styling */
+ input, select {
   width: 100%;
   padding: 0.5rem;
   margin-bottom: 0.5rem;
   border: 1px solid #ddd;
   border-radius: 4px;
-}
-
-.ingredients-section, .instructions-section {
-  margin: 1rem 0;
-}
-
-.ingredient-row {
+ }
+ 
+ /* Error state */
+ input.error, select.error {
+  border-color: #f44336;
+ }
+ 
+ /* Error message display */
+ .error-message {
+  color: #f44336;
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background-color: #ffebee;
+  border-radius: 4px;
+ }
+ 
+ /* Ingredient row grid layout */
+ .ingredient-row {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr auto;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
-}
-
-.instruction-row {
+ }
+ 
+ /* Instruction row layout */
+ .instruction-row {
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
   align-items: center;
-}
-
-.instruction-number {
+ }
+ 
+ .instruction-number {
   padding: 0.5rem;
   font-weight: bold;
-}
-
-.add-btn, .remove-btn {
+ }
+ 
+ /* Button styling */
+ .add-btn, .remove-btn {
   padding: 0.5rem;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-}
-
-.add-btn {
+ }
+ 
+ .add-btn {
   background-color: #4CAF50;
   color: white;
   width: 100%;
   margin-top: 1rem;
-}
-
-.remove-btn {
+ }
+ 
+ .remove-btn {
   background-color: #f44336;
   color: white;
-}
-
-.modal-actions {
+ }
+ 
+ /* Action buttons container */
+ .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
   margin-top: 2rem;
-}
-
-.save-btn, .cancel-btn {
+ }
+ 
+ /* Action button styles */
+ .save-btn, .cancel-btn {
   padding: 0.5rem 1rem;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-}
-
-.save-btn {
+ }
+ 
+ .save-btn {
   background-color: #4CAF50;
   color: white;
-}
-
-.cancel-btn {
+ }
+ 
+ .cancel-btn {
   background-color: #f44336;
   color: white;
-}
-</style>
+ }
+ </style>
