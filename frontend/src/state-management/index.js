@@ -3,6 +3,9 @@
 import { defineStore } from 'pinia';
 import axios from '@/axios';
 import { getUserId } from '@/storage/localStorageManagement.js';
+import { useToast } from "vue-toastification";
+
+const toast = useToast();
 //import router from '@/router'; // Ensure router is correctly imported
 
 function isDayPast(dayDate) {
@@ -95,6 +98,10 @@ export const useWeekStore = defineStore('week', {
         }
 
         if (day.isPast) {
+          toast.info("Der Tag ist bereits vorbei, sie können nichts mehr hinzufügen.", {
+            position: "top-right",
+            timeout: 3500,
+          });
           console.warn('Cannot add recipes to a past day.');
           return;
         }
