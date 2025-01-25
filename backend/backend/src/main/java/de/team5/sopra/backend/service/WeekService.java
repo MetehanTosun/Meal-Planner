@@ -1,9 +1,7 @@
 package de.team5.sopra.backend.service;
 
 import de.team5.sopra.backend.dto.WeekRequest;
-import de.team5.sopra.backend.models.Day;
-import de.team5.sopra.backend.models.User;
-import de.team5.sopra.backend.models.Week;
+import de.team5.sopra.backend.models.*;
 import de.team5.sopra.backend.repository.DayRepository;
 import de.team5.sopra.backend.repository.UserRepository;
 import de.team5.sopra.backend.repository.WeekRepository;
@@ -13,7 +11,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class WeekService {
@@ -181,6 +182,30 @@ public class WeekService {
 	}
 
 	public List<Week> getWeeksByUser(User user) {
-		return weekRepository.findByUser(user);
+		List<Week> weeks = weekRepository.findByUser(user);
+
+		weeks.forEach(week ->
+				week.getDays().forEach(day -> {
+					LocalDateTime dayEndTime = day.getDate().toInstant()
+							.atZone(ZoneId.systemDefault())
+							.toLocalDateTime()
+							.withHour(23)
+							.withMinute(59)
+							.withSecond(59)
+							.withNano(999999999);
+
+					List<UserSpecificRecipe> filteredRecipes = day.getUserSpecificRecipes().stream()
+							.filter(usr -> {
+								Recipe recipe = usr.getRecipe();
+								if (recipe == null) return false;
+								return !recipe.isDeleted() || (recipe.getDeletedTime() != null && recipe.getDeletedTime().isAfter(dayEndTime));
+							})
+							.collect(Collectors.toList());
+
+					day.setUserSpecificRecipes(filteredRecipes);
+				})
+		);
+
+		return weeks;
 	}
 }

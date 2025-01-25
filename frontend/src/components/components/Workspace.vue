@@ -82,7 +82,7 @@
         </div>
       </div>
     </div>
-    <ReactiveDashboard />
+    <!--ReactiveDashboard /-->
     <RecipeDataPopup
       v-if="showPopup"
       :recipe="selectedRecipe"

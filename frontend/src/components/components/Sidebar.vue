@@ -6,10 +6,10 @@
       <div class="sidebar-header">
         <p>Rezepte</p>
       </div>
- 
+
       <!-- Search bar -->
       <SearchbarComponent @update:search="applySearchQuery" />
- 
+
       <!-- Dietary preference filters -->
       <div class="diet-filter">
         <p>Filter:</p>
@@ -41,7 +41,7 @@
           Fleisch
         </label>
       </div>
- 
+
       <!-- Action buttons for creating recipes and showing favorites -->
       <div class="action-buttons">
         <button class="create-recipe-button" @click="openCreateRecipe">
@@ -90,7 +90,7 @@
         </li>
       </ul>
     </div>
- 
+
     <!-- Modal components -->
     <CreateRecipeView
       ref="createRecipeModal"
@@ -293,7 +293,6 @@
     }
   };
 
-  // Initialize
   onMounted(fetchRecipes);
 </script>
 
@@ -302,13 +301,12 @@
   width: 300px;
   background-color: #1f1f1f;
   padding: 20px;
-  border-radius: 8px;
-  border: 1px solid #fff;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  border-right: 1px solid #333;
 }
 
 .sidebar-fixed {
@@ -321,6 +319,7 @@
   margin-top: 20px;
   scrollbar-width: thin;
   scrollbar-color: #4a4a4a #1f1f1f;
+  max-height: 70%;
 }
 
 .recipe-list-container::-webkit-scrollbar {
@@ -434,7 +433,6 @@
 
 .recipe-list li:hover {
   background-color: rgba(24, 24, 24, 0.1);
-  transform: scale(1.02);
 }
 
 .recipe-item {
@@ -454,7 +452,8 @@
 }
 
 .recipe-info p {
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
   overflow: hidden;
   text-overflow: ellipsis;
   margin: 0;

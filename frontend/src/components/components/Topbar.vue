@@ -24,7 +24,7 @@ const handleLogout = () => {
 
 <style>
 .topbar {
-  background-color: #181818;
+  background-color: #1f1f1f;
   height: 60px;
   display: flex;
   align-items: center;
@@ -32,6 +32,7 @@ const handleLogout = () => {
   color: white;
   width: 100%;
   justify-content: space-between;
+  border-bottom: 1px solid #333;
 }
 
 .spacer {

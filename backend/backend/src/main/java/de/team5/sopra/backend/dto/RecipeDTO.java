@@ -5,6 +5,7 @@ import de.team5.sopra.backend.models.Recipe;
 import de.team5.sopra.backend.models.enums.FoodType;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -18,6 +19,7 @@ public class RecipeDTO {
     private Long creatorId;
     private boolean deleted;
     private boolean isFavorite;
+    private LocalDateTime deletedTime;
 
     public static RecipeDTO fromRecipe(Recipe recipe) {
         RecipeDTO dto = new RecipeDTO();
@@ -28,6 +30,7 @@ public class RecipeDTO {
         dto.setIngredients(recipe.getIngredients());
         dto.setCreatorId(recipe.getUser().getId());
         dto.setDeleted(recipe.isDeleted());
+        dto.setDeletedTime(recipe.getDeletedTime());
         dto.setInstructions(recipe.getInstructions());
         dto.setFavorite(recipe.isFavoriteByUser(recipe.getUser().getId()));
         return dto;

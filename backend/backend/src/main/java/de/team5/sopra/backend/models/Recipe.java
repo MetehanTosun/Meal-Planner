@@ -1,5 +1,6 @@
 package de.team5.sopra.backend.models;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -60,6 +61,9 @@ public class Recipe {
     @Column(name = "deleted",nullable = false)
     private boolean deleted = false;
 
+    @Column(name = "deleted_time")
+    private LocalDateTime deletedTime;
+
     @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("recipe-userSpecificRecipe")
     private List<UserSpecificRecipe> userSpecificRecipes = new ArrayList<>();
@@ -116,12 +120,14 @@ public class Recipe {
         return this.favoriteByUsers.contains(userId);
     }
 
+
     @JsonProperty("deleted")
     public boolean isDeleted() {
         return deleted;
     }
-    // Methode zum "Löschen" des Rezepts
+
     public void delete() {
         this.deleted = true;
+        this.deletedTime = LocalDateTime.now();
     }
 }
