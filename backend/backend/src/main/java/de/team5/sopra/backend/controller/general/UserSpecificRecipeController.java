@@ -2,6 +2,7 @@ package de.team5.sopra.backend.controller.general;
 
 import de.team5.sopra.backend.models.UserSpecificRecipe;
 import de.team5.sopra.backend.service.general.UserSpecificRecipeService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -79,7 +80,16 @@ public class UserSpecificRecipeController {
 	}
 
 	@PostMapping("/{id}/decrement-portions")
-	public UserSpecificRecipe decrementPortions(@PathVariable Long id) {
-		return userSpecificRecipeService.decrementPortions(id);
+	public ResponseEntity<?> decrementPortions(@PathVariable Long id) {
+		try {
+			UserSpecificRecipe updatedRecipe = userSpecificRecipeService.decrementPortions(id);
+			return ResponseEntity.ok(updatedRecipe);
+		} catch (EntityNotFoundException e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ein unerwarteter Fehler ist aufgetreten.");
+		}
 	}
 }

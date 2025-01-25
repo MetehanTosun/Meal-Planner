@@ -95,9 +95,10 @@
 <script setup>
 import {ref, onMounted, onUpdated} from 'vue'
 import { useWeekStore } from '@/state-management/index.js';
-import ReactiveDashboard from '@/components/components/Dashboards/ReactiveDashboardPlanner.vue';
 import RecipeDataPopup from '@/components/components/RecipeDataPopup.vue'
+import { useToast } from "vue-toastification";
 
+const toast = useToast();
 const weekStore = useWeekStore();
 const selectedRecipe = ref(null);
 
@@ -144,7 +145,19 @@ const decrementPortions = async (recipe) => {
   try {
     await weekStore.decrementRecipePortions(recipe.id);
   } catch (error) {
-    console.error('Error decrementing portions:', error);
+    if (error.response && error.response.status === 400) {
+      console.log("User tried to reduce the portions below minimum")
+      toast.info("Die Portionen können nicht weniger als 1 sein.", {
+        position: "top-right",
+        timeout: 3500,
+      });
+    } else {
+      console.log("Unexpected Error happened.")
+      toast.error("Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.", {
+        position: "top-right",
+        timeout: 3500,
+      });
+    }
   }
 };
 

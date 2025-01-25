@@ -123,22 +123,6 @@ public class WeekService {
 	}
 
 	@Transactional
-	public Week addDayToWeek(Long weekId, Long dayId) {
-		Week week = weekRepository.findById(weekId)
-				.orElseThrow(() -> new IllegalArgumentException("Week with id " + weekId + " not found."));
-		Day day = dayRepository.findById(dayId)
-				.orElseThrow(() -> new IllegalArgumentException("Day with id " + dayId + " not found."));
-
-		if (week.getDays().contains(day)) {
-			throw new IllegalArgumentException("Day is already part of the Week.");
-		}
-		day.setWeek(week);
-		dayRepository.save(day);
-
-		return week;
-	}
-
-	@Transactional
 	public List<Week> getWeeksInRange(Long userId, int count) {
 		User user = userRepository.findById(userId)
 				.orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));

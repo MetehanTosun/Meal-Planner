@@ -10,5 +10,4 @@ import java.util.List;
 public interface UserSpecificRecipeRepository extends JpaRepository<UserSpecificRecipe, Long> {
 
 	List<UserSpecificRecipe> findByDayId(Long dayId);
-	List<UserSpecificRecipe> findByRecipeId(Long recipeId);
 }

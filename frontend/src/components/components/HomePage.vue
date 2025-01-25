@@ -1,7 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-
-import { mockRecipes } from '@/classes/MockRecipe'
+import { onMounted } from 'vue'
 import Sidebar from '@/components/components/Sidebar.vue'
 import Workspace from '@/components/components/Workspace.vue'
 import Topbar from '@/components/components/Topbar.vue'
@@ -9,13 +7,6 @@ import {authenticatedBoolean, getUserId} from '@/storage/localStorageManagement'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-
-const filteredRecipes = ref(mockRecipes)
-
-function updateFilteredRecipes(newFilteredRecipes) {
-  console.log('Updating filtered recipes:', newFilteredRecipes)
-  filteredRecipes.value = newFilteredRecipes
-}
 
 const navigateTo = (page) => {
   router.push({ name: page });
@@ -40,10 +31,7 @@ onMounted(() => {
     <Topbar />
 
     <div class="main-container">
-      <Sidebar
-        :filtered-recipes="filteredRecipes"
-        @update:filtered-recipes="updateFilteredRecipes"
-      />
+      <Sidebar/>
 
       <Workspace />
     </div>

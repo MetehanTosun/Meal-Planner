@@ -44,11 +44,10 @@
 
 <script setup>
 import { useWeekStore } from '@/state-management/index.js'
-  import { onMounted, ref } from 'vue'
-  import ReactiveDashboardShoppingList from '@/components/components/Dashboards/ReactiveDashboardShoppingList.vue'
-  import { generateShoppingListPDF } from '@/utils/pdfGenerator'
-  import { INGREDIENT_TYPES } from '@/classes/IngredientTypes'
-  import router from "@/router/index.js";
+import { onMounted, ref } from 'vue'
+import { generateShoppingListPDF } from '@/utils/pdfGenerator'
+import { INGREDIENT_TYPES } from '@/classes/IngredientTypes'
+import router from "@/router/index.js";
 
 const weekStore = useWeekStore()
 const isLoading = ref(true)

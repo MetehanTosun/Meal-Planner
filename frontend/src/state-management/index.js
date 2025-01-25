@@ -203,9 +203,8 @@ export const useWeekStore = defineStore('week', {
         console.log(`Decrementing portions for recipe ID ${recipeId}`);
         await axios.post(`/user-specific-recipes/${recipeId}/decrement-portions`);
         console.log(`Portions decremented for recipe ID ${recipeId}`);
-        await this.fetchWeeksInRange(this.weeks.length); // Refresh weeks to update changes
+        await this.fetchWeeksInRange(this.weeks.length);
       } catch (error) {
-        console.error(`Error decrementing portions for recipe ID ${recipeId}:`, error);
         throw error;
       }
     },
@@ -216,11 +215,10 @@ export const useWeekStore = defineStore('week', {
       const lastWeek = this.weeks[this.weeks.length - 1];
       const lastWeekEndDate = new Date(lastWeek.endDate);
 
-      // Check if today is beyond the last week's end date
+      // Check if today is beyond the last week's end date and then creates a createWeek request to the backend
       if (today > lastWeekEndDate) {
         console.log('Current week is outdated. Creating a new week...');
 
-        // Create a new week on the backend
         const nextWeekStartDate = new Date(lastWeekEndDate);
         nextWeekStartDate.setDate(nextWeekStartDate.getDate() + 1); // Day after last week's end date
         const nextWeekEndDate = new Date(nextWeekStartDate);
@@ -230,7 +228,7 @@ export const useWeekStore = defineStore('week', {
           userId: getUserId(),
           startDate: nextWeekStartDate,
           endDate: nextWeekEndDate,
-          days: [], // Backend should populate days automatically
+          days: [],
         });
 
         // Fetch updated weeks (next 2 weeks, including the new one)

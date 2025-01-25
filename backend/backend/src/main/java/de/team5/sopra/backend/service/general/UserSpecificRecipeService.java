@@ -95,8 +95,8 @@ public class UserSpecificRecipeService {
 	public UserSpecificRecipe decrementPortions(Long id) {
 		UserSpecificRecipe existingUsr = userSpecificRecipeRepository.findById(id)
 				.orElseThrow(() -> new EntityNotFoundException("UserSpecificRecipe not found with id " + id));
-		if(existingUsr.getPortions() == 0) {
-			throw new IllegalArgumentException("The portions can't be negative");
+		if(existingUsr.getPortions() == 1) {
+			throw new IllegalArgumentException("Portions can't be less than 1.");
 		}
 		existingUsr.setPortions(existingUsr.getPortions() - 1);
 		return userSpecificRecipeRepository.save(existingUsr);

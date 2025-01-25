@@ -15,13 +15,11 @@ public class ShoppingListService {
 
         for (Recipe recipe : recipes) {
             for (Ingredient ingredient : recipe.getIngredients()) {
-                // Formatiere den Namen: Erster Buchstabe groß, Rest klein
+
                 String formattedName = capitalizeWords(ingredient.getName());
 
-                // Generiere den eindeutigen Schlüssel: "Zutatenname (Einheit)"
                 String key = formattedName + " (" + ingredient.getUnit() + ")";
 
-                // Falls der Schlüssel existiert, addiere die Menge
                 shoppingList.put(
                         key,
                         shoppingList.getOrDefault(key, 0.0) + ingredient.getAmount()
@@ -46,7 +44,7 @@ public class ShoppingListService {
                         .append(" ");
             }
         }
-        return capitalized.toString().trim(); // Entferne überschüssige Leerzeichen
+        return capitalized.toString().trim();
     }
 
 }
