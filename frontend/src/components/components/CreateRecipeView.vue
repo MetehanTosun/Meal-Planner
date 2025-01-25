@@ -25,7 +25,7 @@
     <option value="STÜCK">Stück</option>
   </select>
   <select v-model="ingredient.ingredientType">
-    <option v-for="(type, key) in INGREDIENT_TYPES" 
+    <option v-for="(type, key) in INGREDIENT_TYPES"
             :key="key"
             :value="key">
       {{ type.label }}
@@ -114,7 +114,7 @@ const validateRecipe = () => {
   if (!recipe.name || recipe.name.trim() === '') {
     throw new Error('Bitte geben Sie einen Rezeptnamen ein')
   }
-  if (!recipe.time || recipe.time <= 0) {
+  if (!recipe.time || recipe.time <= 0 || recipe.time > 100000) {
     throw new Error('Bitte geben Sie eine gültige Zubereitungszeit ein')
   }
   if (!recipe.ingredients.length) {
@@ -124,7 +124,7 @@ const validateRecipe = () => {
     if (!ingredient.name || ingredient.name.trim() === '') {
       throw new Error('Bitte geben Sie für alle Zutaten einen Namen ein')
     }
-    if (!ingredient.amount || ingredient.amount <= 0) {
+    if (!ingredient.amount || ingredient.amount <= 0 || ingredient.amount > 10000000) {
       throw new Error('Bitte geben Sie für alle Zutaten eine gültige Menge ein')
     }
     if (!ingredient.unit) {
