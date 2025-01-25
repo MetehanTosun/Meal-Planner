@@ -114,28 +114,33 @@
   /**
    * Computed property to filter recipes based on dietFilter, searchQuery, and favorites.
    */
-  const filteredRecipes = computed(() => {
-    let result = recipes.value;
+   const filteredRecipes = computed(() => {
+  let result = recipes.value;
 
-    // Apply favorites filter if enabled
-    if (showOnlyFavorites.value) {
-      result = result.filter(recipe => recipe.isFavorite);
-    }
+  // Apply favorites filter if enabled
+  if (showOnlyFavorites.value) {
+    result = result.filter(recipe => recipe.isFavorite);
+  }
 
-    // Apply diet filter if set
-    if (dietFilter.value.length) {
-      result = result.filter((recipe) => recipe.foodType === dietFilter.value[0]);
-    }
+  // Apply diet filter if set
+  if (dietFilter.value.length) {
+    result = result.filter((recipe) => {
+      if (dietFilter.value.includes('VEGETARIAN')) {
+        return recipe.foodType === 'VEGETARIAN' || recipe.foodType === 'VEGAN';
+      }
+      return recipe.foodType === dietFilter.value[0];
+    });
+  }
 
-    // Apply search filter if query exists
-    if (searchQuery.value.trim()) {
-      result = result.filter((recipe) =>
-        recipe.name.toLowerCase().includes(searchQuery.value.trim().toLowerCase())
-      );
-    }
+  // Apply search filter if query exists
+  if (searchQuery.value.trim()) {
+    result = result.filter((recipe) =>
+      recipe.name.toLowerCase().includes(searchQuery.value.trim().toLowerCase())
+    );
+  }
 
-    return result;
-  });
+  return result;
+});
 
   /**
    * Fetches all recipes from the backend API and processes their favorite status.
@@ -209,7 +214,7 @@
   };
 
   /**
-   * Apply the diet filter
+   * Apply the diet filter, ensures that only one filter is active at a time
    */
   const applyDietFilter = () => {
     if (dietFilter.value.length > 1) {
