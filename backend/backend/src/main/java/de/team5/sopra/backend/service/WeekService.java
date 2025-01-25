@@ -74,7 +74,6 @@ public class WeekService {
 
 	@Transactional
 	public Week getOrCreateCurrentWeek(Long id) {
-		// TODO: Implement Check
 		Week latestWeek = weekRepository.findTopByUserOrderByStartDateDesc(userRepository.findById(id).get());
 		if (latestWeek == null || isWeekOutdated(latestWeek)) {
 			Week newWeek = createNewWeekForUser(id, new Date());
@@ -93,14 +92,15 @@ public class WeekService {
 		}
 		User user = userService.getUserById(id);
 		Week newWeek = new Week();
+		Date adjustedStartDate = adjustDateToMonday(startDate);
+
 		newWeek.setUser(user);
-		newWeek.setStartDate(startDate);
-		newWeek.setEndDate(calculateEndDate(startDate));
+		newWeek.setStartDate(adjustedStartDate);
+		newWeek.setEndDate(calculateEndDate(adjustedStartDate));
 
 		Calendar c = Calendar.getInstance();
-		c.setTime(startDate);
+		c.setTime(adjustedStartDate);
 		for (int i = 0; i < 7; i++) {
-			System.out.println("Creating the days");
 			Day day = new Day();
 			day.setDate(c.getTime());
 			day.setWeek(newWeek);
@@ -113,6 +113,17 @@ public class WeekService {
 		user.getWeeks().add(savedWeek);
 		userRepository.save(user);
 		return savedWeek;
+	}
+
+	private Date adjustDateToMonday(Date date) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+
+		int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+		int daysToMonday = (dayOfWeek == Calendar.SUNDAY) ? -6 : (Calendar.MONDAY - dayOfWeek);
+		calendar.add(Calendar.DAY_OF_YEAR, daysToMonday);
+
+		return calendar.getTime();
 	}
 
 	private Date calculateEndDate(Date startDate) {
@@ -129,8 +140,6 @@ public class WeekService {
 
 		Pageable pageable = PageRequest.of(0, count);
 		List<Week> weeks = weekRepository.findByUserOrderByStartDateDesc(user, pageable);
-
-		System.out.println("Fetched weeks: " + weeks);
 
 		Collections.reverse(weeks);
 
