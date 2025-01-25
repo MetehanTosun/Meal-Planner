@@ -31,34 +31,46 @@
           PDF herunterladen
       </button>
     </div>
+    <div class="dashboard-navigation">
+      <ul class="nav">
+        <li @click="navigateTo('history')">Historie</li>
+        <li @click="navigateTo('statistics')">Statistik</li>
+        <li @click="navigateTo('home')">Planner</li>
+      </ul>
+    </div>
   </div>
-  <ReactiveDashboardShoppingList/>
+
 </template>
 
 <script setup>
-  import { useWeekStore } from '@/state-management/index.js'
+import { useWeekStore } from '@/state-management/index.js'
   import { onMounted, ref } from 'vue'
   import ReactiveDashboardShoppingList from '@/components/components/Dashboards/ReactiveDashboardShoppingList.vue'
   import { generateShoppingListPDF } from '@/utils/pdfGenerator'
   import { INGREDIENT_TYPES } from '@/classes/IngredientTypes'
+  import router from "@/router/index.js";
 
-  const weekStore = useWeekStore()
-  const isLoading = ref(true)
+const weekStore = useWeekStore()
+const isLoading = ref(true)
 
-  const getIngredientTypeColor = (type) => {
-    console.log('Type:', type, 'Color:', INGREDIENT_TYPES[type]?.color || INGREDIENT_TYPES.NONE.color);
-    return INGREDIENT_TYPES[type]?.color || INGREDIENT_TYPES.NONE.color;
+const getIngredientTypeColor = (type) => {
+  console.log('Type:', type, 'Color:', INGREDIENT_TYPES[type]?.color || INGREDIENT_TYPES.NONE.color);
+  return INGREDIENT_TYPES[type]?.color || INGREDIENT_TYPES.NONE.color;
+}
+
+onMounted(async () => {
+  try {
+    await weekStore.fetchWeeksInRange(2)
+  } finally {
+    isLoading.value = false
   }
+})
 
-  onMounted(async () => {
-    try {
-      await weekStore.fetchWeeksInRange(2)
-    } finally {
-      isLoading.value = false
-    }
-  })
+const navigateTo = (page) => {
+  router.push({ name: page });
+};
 
-  const downloadPDF = () => {
+const downloadPDF = () => {
   const startDate = weekStore.getCurrentWeekStartDate;
   const endDate = weekStore.getCurrentWeekEndDate;
 
@@ -71,7 +83,7 @@
     weekStore.getShoppingList,
     startDate,
     endDate,
-    INGREDIENT_TYPES  
+    INGREDIENT_TYPES
   );
 
   pdf.download(`Einkaufszettel_${startDate.split('T')[0]}.pdf`);
@@ -131,5 +143,43 @@
 
   .download-button:hover {
     background-color: #444;
+  }
+  .dashboard-navigation {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 10%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #1f1f1f;
+    border-top: 1px solid #333;
+    z-index: 100;
+  }
+
+  .nav {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.5rem;
+  }
+
+  .nav li {
+    list-style-type: none;
+    padding: 1rem;
+    background-color: #2b2b2b;
+    border-radius: 8px;
+    color: #fff;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    border: 2px solid #333;
+  }
+
+  .nav li:hover {
+    background-color: white;
+    color: #1f1f1f;
+    cursor: pointer;
   }
 </style>

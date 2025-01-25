@@ -65,30 +65,79 @@ public class UserService implements UserDetailsService {
     }
 
     public UserStatisticsDTO calculateUserStatistics(Long userId) {
-
         userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
+
         List<Week> weeks = weekRepository.findByUserId(userId);
         if (weeks.isEmpty()) {
-            return new UserStatisticsDTO(0, new HashMap<>(), new HashMap<>(), 0);
+            return new UserStatisticsDTO(0, new HashMap<>(), new HashMap<>(), 0, new HashMap<>(), 0, new HashMap<>());
         }
+
         int totalTime = 0;
         Map<FoodType, Integer> foodTypeCounts = new HashMap<>();
         Map<String, Integer> ingredientCounts = new HashMap<>();
+        Map<String, Integer> weeklyCookingTimes = new HashMap<>();
+        Map<String, Integer> recipeFrequency = new HashMap<>();
         int recipeCount = 0;
+
+        for (Week week : weeks) {
+            int weeklyTime = 0;
+            for (Day day : week.getDays()) {
+                for (UserSpecificRecipe userSpecificRecipe : day.getUserSpecificRecipes()) {
+                    Recipe recipe = userSpecificRecipe.getRecipe();
+                    if (recipe.isDeleted()) {
+                        continue;
+                    }
+
+                    int recipeTime = recipe.getTime();
+                    totalTime += recipeTime;
+                    weeklyTime += recipeTime;
+
+                    foodTypeCounts.merge(recipe.getFoodType(), 1, Integer::sum);
+
+                    for (Ingredient ingredient : recipe.getIngredients()) {
+                        ingredientCounts.merge(ingredient.getName(), 1, Integer::sum);
+                    }
+
+                    recipeFrequency.merge(recipe.getName(), 1, Integer::sum);
+                    recipeCount++;
+                }
+            }
+
+            String weekLabel = week.getStartDate().toString();
+            weeklyCookingTimes.put(weekLabel, weeklyTime);
+        }
+
+        int averageTimePerRecipe = calculateAverageTimePerRecipe(totalTime, recipeCount);
+
+        return new UserStatisticsDTO(
+                totalTime,
+                foodTypeCounts,
+                ingredientCounts,
+                recipeCount,
+                weeklyCookingTimes,
+                averageTimePerRecipe,
+                recipeFrequency
+        );
+    }
+
+    private int calculateAverageTimePerRecipe(int totalTime, int recipeCount) {
+        return recipeCount > 0 ? totalTime / recipeCount : 0;
+    }
+
+    private Map<String, Integer> calculateRecipeFrequency(List<Week> weeks) {
+        Map<String, Integer> recipeFrequency = new HashMap<>();
         for (Week week : weeks) {
             for (Day day : week.getDays()) {
                 for (UserSpecificRecipe userSpecificRecipe : day.getUserSpecificRecipes()) {
                     Recipe recipe = userSpecificRecipe.getRecipe();
-                    totalTime += recipe.getTime();
-                    foodTypeCounts.merge(recipe.getFoodType(), 1, Integer::sum);
-                    for (Ingredient ingredient : recipe.getIngredients()) {
-                        ingredientCounts.merge(ingredient.getName(), 1, Integer::sum);
+                    if (recipe.isDeleted()) {
+                        continue;
                     }
-                    recipeCount++;
+                    recipeFrequency.merge(recipe.getName(), 1, Integer::sum);
                 }
             }
         }
-        return new UserStatisticsDTO(totalTime, foodTypeCounts, ingredientCounts, recipeCount);
+        return recipeFrequency;
     }
 }
