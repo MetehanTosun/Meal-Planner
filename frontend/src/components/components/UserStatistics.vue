@@ -5,6 +5,7 @@ import router from "@/router/index.js";
 import "chart.js/auto";
 import { Chart } from "chart.js";
 import { getUserId } from "@/storage/localStorageManagement.js";
+import {BASE_URL} from "@/classes/ipAdresses.js";
 
 const doughnutChartEl = ref(null);
 const barChartEl = ref(null);
@@ -16,7 +17,7 @@ const statistics = ref(null);
 const fetchStatistics = async () => {
   try {
     const userId = getUserId();
-    const response = await axios.get(`http://localhost:8080/users/${userId}/statistics`);
+    const response = await axios.get(`${BASE_URL}/users/${userId}/statistics`);
     statistics.value = response.data;
   } catch (error) {
     console.error("Error fetching statistics:", error);

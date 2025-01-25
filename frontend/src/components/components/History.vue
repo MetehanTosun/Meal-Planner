@@ -3,6 +3,7 @@ import { ref, onMounted } from "vue";
 import axios from "axios";
 import router from "@/router/index.js";
 import { getUserId } from "@/storage/localStorageManagement.js"
+import { BASE_URL } from "@/classes/ipAddresses";
 
 const changeTo = (value) => {
   if (value === "statistics") {
@@ -19,7 +20,7 @@ const weeks = ref([]);
 const fetchWeeks = async () => {
   try {
     const userId = getUserId();
-    const response = await axios.get(`http://localhost:8080/weeks/user/${userId}`);
+    const response = await axios.get(`${BASE_URL}/weeks/user/${userId}`);
     weeks.value = response.data;
   } catch (error) {
     console.error("Fehler beim Laden der Wochen:", error);

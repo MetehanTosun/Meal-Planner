@@ -1,8 +1,9 @@
 import axios from 'axios'
 import { getUserId } from '@/storage/localStorageManagement.js'
+import { BASE_URL} from "@/classes/ipAdresses.js";
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:8080',
+  baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json'
   }
