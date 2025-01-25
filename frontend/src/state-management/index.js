@@ -29,37 +29,35 @@ export const useWeekStore = defineStore('week', {
     async fetchWeeksInRange(count = 2) {
       try {
         const userId = getUserId();
-        if(!userId){
+        if(!userId) {
           console.debug("No user logged in, skipping week fetch");
           return;
         }
 
-        console.log('--- Fetching Weeks in Range ---');
-        console.log(`Current Week Index Before Fetch: ${this.currentWeekIndex}`);
-        console.log(`Requested Count: ${count}`);
-
         const response = await axios.get(`/weeks/range/${getUserId()}?count=${count}`);
-        // Map weeks to include isPast flag for each day
-        this.weeks = response.data
-          .map(week => ({
-            ...week,
-            days: week.days.map(day => ({
-              ...day,
-              isPast: isDayPast(day.date),
-            })),
-          }));
 
-        console.log('Fetched Weeks with isPast flags for days:', this.weeks);
+        // Fetches recipe data for each recipe
+        const weeksWithFullRecipeData = await Promise.all(response.data.map(async week => ({
+          ...week,
+          days: await Promise.all(week.days.map(async day => ({
+            ...day,
+            isPast: isDayPast(day.date),
+            userSpecificRecipes: await Promise.all(day.userSpecificRecipes.map(async recipe => {
+              const recipeData = await axios.get(`/recipes/${recipe.recipeData.id}`);
+              return {
+                ...recipe,
+                recipeData: recipeData.data
+              };
+            }))
+          })))
+        })));
 
-        // Maintain currentWeekIndex within bounds
-        if (this.weeks.length > this.currentWeekIndex) {
-          // No change needed
-        } else {
-          this.currentWeekIndex = this.weeks.length - 1; // Fallback to last valid week
+        this.weeks = weeksWithFullRecipeData;
+
+        if (this.weeks.length <= this.currentWeekIndex) {
+          this.currentWeekIndex = this.weeks.length - 1;
         }
 
-        console.log(`Current Week Index After Fetch: ${this.currentWeekIndex}`);
-        console.log('-------------------------------');
       } catch (error) {
         console.error('Error fetching weeks in range:', error);
         throw error;
