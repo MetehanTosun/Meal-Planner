@@ -83,6 +83,8 @@
   padding: 20px 30px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
   max-width: 400px;
+  overflow-y: auto;
+  max-height: 600px;
   width: 90%;
   text-align: left;
 }
@@ -117,6 +119,8 @@
   margin: 5px 0;
   font-size: 0.95rem;
   color: #555;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 .popup-steps {
@@ -129,5 +133,7 @@
   margin: 5px 0;
   font-size: 0.95rem;
   color: #555;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 </style>
