@@ -3,15 +3,15 @@
   <div v-if="showModal" class="modal-overlay">
     <div class="modal-content">
       <h2>Rezept teilen</h2>
-      
+
       <!-- Username input form group -->
       <div class="form-group">
         <label>Benutzername:</label>
-        <input 
-          v-model="username" 
-          type="text" 
+        <input
+          v-model="username"
+          type="text"
           placeholder="Benutzername eingeben"
-          @keyup.enter="shareRecipe"  
+          @keyup.enter="shareRecipe"
         >
       </div>
 
@@ -84,14 +84,13 @@ const closeModal = () => {
   recipeId.value = null
 }
 
-// Expose methods to parent component
 defineExpose({
   showModal,
   openModal,
   closeModal
 })
 </script>
-  
+
   <style scoped>
   .modal-overlay {
     position: fixed;
@@ -105,7 +104,7 @@ defineExpose({
     align-items: center;
     z-index: 1000;
   }
-  
+
   .modal-content {
     background: #1f1f1f;
     color: white;
@@ -115,24 +114,24 @@ defineExpose({
     max-width: 400px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
-  
+
   h2 {
     margin-top: 0;
     margin-bottom: 1.5rem;
     font-size: 1.5rem;
     text-align: center;
   }
-  
+
   .form-group {
     margin-bottom: 1.5rem;
   }
-  
+
   .form-group label {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 500;
   }
-  
+
   input {
     width: 100%;
     padding: 0.5rem;
@@ -143,19 +142,19 @@ defineExpose({
     color: white;
     font-size: 1rem;
   }
-  
+
   input:focus {
     outline: none;
     border-color: #2196F3;
   }
-  
+
   .modal-actions {
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
     margin-top: 2rem;
   }
-  
+
   .save-btn, .cancel-btn {
     padding: 0.5rem 1rem;
     border: none;
@@ -164,21 +163,21 @@ defineExpose({
     font-size: 1rem;
     transition: background-color 0.2s ease;
   }
-  
+
   .save-btn {
     background-color: #4CAF50;
     color: white;
   }
-  
+
   .save-btn:hover {
     background-color: #45a049;
   }
-  
+
   .cancel-btn {
     background-color: #f44336;
     color: white;
   }
-  
+
   .cancel-btn:hover {
     background-color: #d32f2f;
   }

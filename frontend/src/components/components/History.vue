@@ -4,6 +4,8 @@ import axios from "axios";
 import router from "@/router/index.js";
 import { getUserId } from "@/storage/localStorageManagement.js"
 
+const weeks = ref([]);
+
 const changeTo = (value) => {
   if (value === "statistics") {
     router.push({ name: "statistics" });
@@ -14,11 +16,26 @@ const changeTo = (value) => {
   }
 };
 
-const weeks = ref([]);
+const formatDate = (date) => {
+  const options = { year: "numeric", month: "long", day: "numeric" };
+  return new Date(date).toLocaleDateString("de-DE", options);
+};
 
+
+//////////////////////////////////////
+//           Important              //
+//////////////////////////////////////
+
+/**
+ * Fetches the weeks that are filtered, by deletion:Bool and also if the recipe
+ * might have been deleted after the day finished. Since those should still be visible in the history.
+ *
+ * @returns {Promise<void>}
+ */
 const fetchWeeks = async () => {
   try {
     const userId = getUserId();
+
     const response = await axios.get(`http://localhost:8080/weeks/user/${userId}`);
     weeks.value = response.data;
   } catch (error) {
@@ -26,12 +43,8 @@ const fetchWeeks = async () => {
   }
 };
 
-const formatDate = (date) => {
-  const options = { year: "numeric", month: "long", day: "numeric" };
-  return new Date(date).toLocaleDateString("de-DE", options);
-};
-
 onMounted(fetchWeeks);
+
 </script>
 
 <template>

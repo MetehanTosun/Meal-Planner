@@ -26,7 +26,6 @@ public class DayController {
 
     /*
      * Never used in Frontend
-     * TODO: Implement tests with this
      */
     @GetMapping
     public List<Day> getAllDays(){
@@ -51,6 +50,13 @@ public class DayController {
 
     }
 
+    /**
+     * Counter Part of the add recipe to day
+     * PARAM none only PathVariables
+     *
+     * @param recipeId
+     * @return
+     */
     @DeleteMapping("/{dayId}/recipes/{recipeId}")
     public ResponseEntity<String> removeRecipeFromDay(
             @PathVariable Long dayId,
@@ -80,6 +86,8 @@ public class DayController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
+
+    // Never used in frontend
     @PutMapping("/{id}")
     public ResponseEntity<Day> updateDay(@PathVariable Long id, @RequestBody DayRequest dayRequest) {
         try {
@@ -92,8 +100,12 @@ public class DayController {
         }
     }
 
-    // NEW FEATURE
-
+    /**
+     * POST /add-recipe adds a recipe to a day
+     * PARAM day:ID, recipe:ID, portions:Num
+     *
+     * @return 200 Okay
+     */
     @PostMapping("/add-recipe")
     public ResponseEntity<Day> addRecipeToDayWithPortions(@RequestBody @Valid AddRecipeToDayRequest request) {
         System.out.println("The day id is: " + request.getDayId());

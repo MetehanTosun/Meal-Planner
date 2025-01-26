@@ -33,7 +33,10 @@ public class WeekService {
 	}
 
 	/**
-	 * Creates a new Week from WeekRequest and always enforces a valid User ID.
+	 * Creates a week with a DTO
+	 *
+	 * It checks all the values of the request and it saves the newly created week at the end.
+	 * @param weekRequest           day:ID start:Date end:Date user:ID
 	 */
 	public Week createWeek(WeekRequest weekRequest) {
 		if (weekRequest.getUserId() == null) {
@@ -56,6 +59,16 @@ public class WeekService {
 								"Day with ID " + dayId + " does not exist!"));
 				newWeek.addDay(day);
 			}
+		}else{
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(weekRequest.getStartDate());
+			for (int i = 0; i < 7; i++) {
+				Day day = new Day();
+				day.setDate(calendar.getTime());
+				day.setWeek(newWeek);
+				newWeek.getDays().add(day);
+				calendar.add(Calendar.DAY_OF_YEAR, 1);
+			}
 		}
 
 		return weekRepository.save(newWeek);
@@ -72,6 +85,14 @@ public class WeekService {
 		weekRepository.deleteById(id);
 	}
 
+	/**
+	 * Retrieves the latest week via a custom query for a user or creates one if it doesn't exist
+	 *
+	 * If the week doesn't exist or is outDated, then it automatically creates a new Week for the user and saves it
+	 *
+	 * @param id        user:ID
+	 * @return          week:Latest
+	 */
 	@Transactional
 	public Week getOrCreateCurrentWeek(Long id) {
 		Week latestWeek = weekRepository.findTopByUserOrderByStartDateDesc(userRepository.findById(id).get());
@@ -80,10 +101,6 @@ public class WeekService {
 			return weekRepository.save(newWeek);
 		}
 		return latestWeek;
-	}
-
-	private boolean isWeekOutdated(Week week) {
-		return week.getEndDate() != null && week.getEndDate().before(new Date());
 	}
 
 	public Week createNewWeekForUser(Long id, Date startDate) {
@@ -100,6 +117,9 @@ public class WeekService {
 
 		Calendar c = Calendar.getInstance();
 		c.setTime(adjustedStartDate);
+
+		// In der for-Schleife wird com Montag aus heweils immer 1 Tag drauf addiert um das Datum aktuell zu halten
+
 		for (int i = 0; i < 7; i++) {
 			Day day = new Day();
 			day.setDate(c.getTime());
@@ -113,24 +133,6 @@ public class WeekService {
 		user.getWeeks().add(savedWeek);
 		userRepository.save(user);
 		return savedWeek;
-	}
-
-	private Date adjustDateToMonday(Date date) {
-		Calendar calendar = Calendar.getInstance();
-		calendar.setTime(date);
-
-		int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
-		int daysToMonday = (dayOfWeek == Calendar.SUNDAY) ? -6 : (Calendar.MONDAY - dayOfWeek);
-		calendar.add(Calendar.DAY_OF_YEAR, daysToMonday);
-
-		return calendar.getTime();
-	}
-
-	private Date calculateEndDate(Date startDate) {
-		Calendar calendar = Calendar.getInstance();
-		calendar.setTime(startDate);
-		calendar.add(Calendar.DAY_OF_YEAR, 6);
-		return calendar.getTime();
 	}
 
 	@Transactional
@@ -179,26 +181,62 @@ public class WeekService {
 
 		weeks.forEach(week ->
 				week.getDays().forEach(day -> {
-					LocalDateTime dayEndTime = day.getDate().toInstant()
-							.atZone(ZoneId.systemDefault())
-							.toLocalDateTime()
-							.withHour(23)
-							.withMinute(59)
-							.withSecond(59)
-							.withNano(999999999);
+					LocalDateTime dayEndTime = calculateLocalDateTime(day);
 
-					List<UserSpecificRecipe> filteredRecipes = day.getUserSpecificRecipes().stream()
-							.filter(usr -> {
-								Recipe recipe = usr.getRecipe();
-								if (recipe == null) return false;
-								return !recipe.isDeleted() || (recipe.getDeletedTime() != null && recipe.getDeletedTime().isAfter(dayEndTime));
-							})
-							.collect(Collectors.toList());
+					List<UserSpecificRecipe> filteredRecipes = filterRecipesByDeletionStatus(day, dayEndTime);
 
 					day.setUserSpecificRecipes(filteredRecipes);
 				})
 		);
 
 		return weeks;
+	}
+
+	//                                  //
+	//              HELPER              //
+	//                                  //
+
+	private LocalDateTime calculateLocalDateTime(Day day) {
+		return day.getDate().toInstant()
+				.atZone(ZoneId.systemDefault())
+				.toLocalDateTime()
+				.withHour(23)
+				.withMinute(59)
+				.withSecond(59)
+				.withNano(999999999);
+	}
+
+	private List<UserSpecificRecipe> filterRecipesByDeletionStatus(Day day, LocalDateTime dayEndTime) {
+		return day.getUserSpecificRecipes().stream()
+				.filter(usr -> {
+					Recipe recipe = usr.getRecipe();
+					if (recipe == null) {
+						return false;
+					}
+					return !recipe.isDeleted() ||
+							(recipe.getDeletedTime() != null && recipe.getDeletedTime().isAfter(dayEndTime));
+				})
+				.collect(Collectors.toList());
+	}
+	private Date adjustDateToMonday(Date date) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+
+		int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+		int daysToMonday = (dayOfWeek == Calendar.SUNDAY) ? -6 : (Calendar.MONDAY - dayOfWeek);
+		calendar.add(Calendar.DAY_OF_YEAR, daysToMonday);
+
+		return calendar.getTime();
+	}
+
+	private Date calculateEndDate(Date startDate) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(startDate);
+		calendar.add(Calendar.DAY_OF_YEAR, 6);
+		return calendar.getTime();
+	}
+
+	private boolean isWeekOutdated(Week week) {
+		return week.getEndDate() != null && week.getEndDate().before(new Date());
 	}
 }

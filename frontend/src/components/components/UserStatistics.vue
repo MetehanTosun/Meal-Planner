@@ -6,13 +6,16 @@ import "chart.js/auto";
 import { Chart } from "chart.js";
 import { getUserId } from "@/storage/localStorageManagement.js";
 
+// For HTML to use dynamic reference
 const doughnutChartEl = ref(null);
 const barChartEl = ref(null);
 const lineChartEl = ref(null);
 const recipeFrequencyChartEl = ref(null);
 
+// Saves the entire response
 const statistics = ref(null);
 
+// Fetches pre calulated statistics in the backend
 const fetchStatistics = async () => {
   try {
     const userId = getUserId();
@@ -28,11 +31,16 @@ const navigateTo = (page) => {
   router.push({ name: page });
 };
 
+
 const initCharts = () => {
   if (!statistics.value) return;
 
+  // How often a food type comes
   const foodTypeData = statistics.value.foodTypeCounts || {};
+
   const labelsFood = Object.keys(foodTypeData);
+
+  // Type of Food like vegan, vegetarian or meat
   const countsFood = Object.values(foodTypeData);
 
   new Chart(doughnutChartEl.value, {
@@ -61,6 +69,7 @@ const initCharts = () => {
   });
 
   const ingredientData = statistics.value.ingredientCounts || {};
+  // Map in the backend between Ingredient and
   const labelsIng = Object.keys(ingredientData);
   const countsIng = Object.values(ingredientData);
 

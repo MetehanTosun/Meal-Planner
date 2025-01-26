@@ -35,10 +35,7 @@ public class UserSpecificRecipeController {
 
 	/**
 	 * POST /user-specific-recipes
-	 * Erwartet ein JSON, das Felder wie recipeId, dayId und portions enthält.
-	 *
-	 * Euer Frontend müsste z. B. { "recipe": { "id": 1 }, "day": { "id": 2 }, "portions": 3 }
-	 * oder so ähnlich schicken, damit JPA das Rezept und den Tag verknüpfen kann.
+	 * Erwartet ein JSON, mit recipeId, dayId und portions enthält.
 	 */
 	@PostMapping
 	public ResponseEntity<UserSpecificRecipe> createUserSpecificRecipe(
@@ -67,7 +64,7 @@ public class UserSpecificRecipeController {
 
 	/**
 	 * Optional: GET /user-specific-recipes/day/{dayId}
-	 * Listet alle Einträge für einen bestimmten Day auf.
+	 * Listet alle USR´s für einen bestimmten Day auf.
 	 */
 	@GetMapping("/day/{dayId}")
 	public List<UserSpecificRecipe> getAllByDay(@PathVariable Long dayId) {

@@ -12,6 +12,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import de.team5.sopra.backend.dto.UserStatisticsDTO;
+
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 
 @Service
@@ -64,6 +67,22 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new IllegalArgumentException("User with username " + username + " not found"));
     }
 
+    /**
+     * Calculates user statistics, by iterating through all of the weeks the user has and applying logical calulations.
+     *
+     * totalTime => adding up each recipes time
+     * recipeCount => increase after iterating through each recipe in a day
+     * foodTypeCounts => uses merge and adds a value of 1 for each foodtype thats new and then adds up recurring
+     *                   ones in the map
+     * ingredientCounts => uses a similar strategy to foodType, just that it checks for the name
+     * weeklyCookingTimes => assigns the weekly time that one spend cooking, by adding up all the recipeTimes of a week
+     *                       and reseting after a full week iteration before the next one
+     * recipeFrequency =>uses the same strat as ingreadientCounts with recipe names
+     * averageTime => add up all the recipes in the list and divide totalTime / recipeCount
+     *
+     * @param userId
+     * @return
+     */
     public UserStatisticsDTO calculateUserStatistics(Long userId) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
@@ -83,9 +102,10 @@ public class UserService implements UserDetailsService {
         for (Week week : weeks) {
             int weeklyTime = 0;
             for (Day day : week.getDays()) {
+                LocalDateTime dayEndTime = calculateLocalDateTime(day);
                 for (UserSpecificRecipe userSpecificRecipe : day.getUserSpecificRecipes()) {
                     Recipe recipe = userSpecificRecipe.getRecipe();
-                    if (recipe.isDeleted()) {
+                    if (recipe.isDeleted() && recipe.getDeletedTime() != null && recipe.getDeletedTime().isBefore(dayEndTime)){
                         continue;
                     }
 
@@ -125,19 +145,14 @@ public class UserService implements UserDetailsService {
         return recipeCount > 0 ? totalTime / recipeCount : 0;
     }
 
-    private Map<String, Integer> calculateRecipeFrequency(List<Week> weeks) {
-        Map<String, Integer> recipeFrequency = new HashMap<>();
-        for (Week week : weeks) {
-            for (Day day : week.getDays()) {
-                for (UserSpecificRecipe userSpecificRecipe : day.getUserSpecificRecipes()) {
-                    Recipe recipe = userSpecificRecipe.getRecipe();
-                    if (recipe.isDeleted()) {
-                        continue;
-                    }
-                    recipeFrequency.merge(recipe.getName(), 1, Integer::sum);
-                }
-            }
-        }
-        return recipeFrequency;
+    private LocalDateTime calculateLocalDateTime(Day day) {
+        return day.getDate().toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime()
+                .withHour(23)
+                .withMinute(59)
+                .withSecond(59)
+                .withNano(999999999);
     }
+
 }

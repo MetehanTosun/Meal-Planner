@@ -96,6 +96,11 @@ public class WeekController {
 		}
 	}
 
+	/**
+	 *
+	 * @param userId
+	 * @return
+	 */
 	@GetMapping("/user/{userId}")
 	public ResponseEntity<List<Week>> getWeeksForUser(@PathVariable Long userId) {
 		User user = userService.getUserById(userId);

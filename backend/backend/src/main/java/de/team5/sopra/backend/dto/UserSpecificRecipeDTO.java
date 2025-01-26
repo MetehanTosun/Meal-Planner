@@ -8,7 +8,7 @@ import lombok.Setter;
 @Setter
 public class UserSpecificRecipeDTO {
 	private Long id;
-	private Long recipeId; // Include recipeId
+	private Long recipeId;
 	private int portions;
 
 	public UserSpecificRecipeDTO(UserSpecificRecipe userSpecificRecipe) {

@@ -187,14 +187,13 @@
    */
   const toggleFavorite = async (recipe) => {
     try {
-      console.log('Toggling favorite for recipe:', recipe.id);
+
       const response = await axios.put(`/recipes/${recipe.id}/toggle-favorite`);
-      console.log('Favorite toggled successfully:', response.data);
       recipe.isFavorite = !recipe.isFavorite;
+
     } catch (error) {
       console.error('Toggle favorite error:', error);
 
-      // Prüfe auf spezifische Fehlercodes
       if (error.response?.status === 404) {
         alert('Benutzer wurde nicht gefunden.');
         return;

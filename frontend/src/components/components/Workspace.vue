@@ -53,13 +53,13 @@
                 <div class="action-buttons">
                   <span
                     class="informationTab"
-                    @click="incrementPortions(recipe)"
+                    @click="incrementPortions(recipe, day)"
                   >
                     <p>+</p>
                   </span>
                   <span
                     class="portionsDisplay"
-                    @click="decrementPortions(recipe)"
+                    @click="decrementPortions(recipe, day)"
                   >
                     {{ recipe.portions }}
                   </span>
@@ -70,7 +70,7 @@
                     <p>ℹ</p>
                   </button>
                   <button
-                    @click="removeRecipe(day.id, recipe.recipeData.id)"
+                    @click="removeRecipe(day, recipe.recipeData.id)"
                     class="delete-recipe-button"
                   >
                     x
@@ -93,7 +93,7 @@
 </template>
 
 <script setup>
-import {ref, onMounted, onUpdated} from 'vue'
+import {ref, onMounted} from 'vue'
 import { useWeekStore } from '@/state-management/index.js';
 import RecipeDataPopup from '@/components/components/RecipeDataPopup.vue'
 import { useToast } from "vue-toastification";
@@ -133,17 +133,17 @@ const handleDrop = async (event, dayId) => {
   }
 };
 
-const removeRecipe = async (dayId, recipeId) => {
+const removeRecipe = async (day, recipeId) => {
   try {
-    await weekStore.removeRecipeFromDay(dayId, recipeId);
+    await weekStore.removeRecipeFromDay(day, recipeId);
   } catch (error) {
     console.error('Error removing recipe:', error);
   }
 };
 
-const decrementPortions = async (recipe) => {
+const decrementPortions = async (recipe, day) => {
   try {
-    await weekStore.decrementRecipePortions(recipe.id);
+    await weekStore.decrementRecipePortions(recipe.id, day);
   } catch (error) {
     if (error.response && error.response.status === 400) {
       console.log("User tried to reduce the portions below minimum")
@@ -161,11 +161,11 @@ const decrementPortions = async (recipe) => {
   }
 };
 
-const incrementPortions = async (recipe) => {
+const incrementPortions = async (recipe, day) => {
   try {
-    await weekStore.incrementRecipePortions(recipe.id)
+    await weekStore.incrementRecipePortions(recipe.id, day)
   }catch (error){
-    console.error('Error incrementing portions:', error);
+    console.error(error)
   }
 }
 
@@ -180,8 +180,6 @@ const closePopup = () => {
 };
 const openRecipeInfo = (userSpecificRecipe) => {
   selectedRecipe.value = userSpecificRecipe;
-  console.log('Currently this USR is selected',userSpecificRecipe.id);
-  console.log(userSpecificRecipe.recipeData.foodtype);
   showPopup.value = true;
 };
 </script>

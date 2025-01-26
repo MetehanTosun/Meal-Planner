@@ -101,8 +101,8 @@ public class RecipeService {
     }
 
     /**
-     * Löscht eine einzelne Ingredient aus einem Recipe anhand des Ingredient-Namens.
-     * (Oder man macht es ID-basiert, was meist besser ist.)
+     * Deletes a ingredient from a recipe individually
+     * Never used in frontend
      */
     public void deleteIngredient(Long recipeId, String ingredientName) {
         Recipe recipe = getRecipeById(recipeId);
@@ -141,14 +141,14 @@ public class RecipeService {
             recipe.addFavoriteByUser(userId);
         }
 
-        return recipeRepository.save(recipe);  // Speichern und zurückgeben
+        return recipeRepository.save(recipe);
     }
 
     /**
      * Creates a copy of an original recipe, by getting recipe data via the id and then creating a new recipe
      * and its ingredients.
      *
-     * @param shareRecipeDTO includes recipeId of to be shared recipe and a userName of the receiver.
+     * @param shareRecipeDTO contains ID and Username
      */
     public void shareRecipe(ShareRecipeDTO shareRecipeDTO) {
         if(shareRecipeDTO.getReceiverName() == null){
@@ -158,6 +158,9 @@ public class RecipeService {
         if(receiver.isEmpty()) {
             throw new IllegalArgumentException("The request needs to contain a existing user.");
         }
+
+        // Begin of copying the recipe in the send request
+
         Recipe originalRecipe = getRecipeById(shareRecipeDTO.getRecipeId());
         Recipe copyRecipe = new Recipe();
         copyRecipe.setName(originalRecipe.getName());
@@ -175,6 +178,9 @@ public class RecipeService {
             copiedIngredient.setRecipe(copyRecipe);
             copiedIngredients.add(copiedIngredient);
         }
+
+        // Saving the Copy now
+
         copyRecipe.setIngredients(copiedIngredients);
         recipeRepository.save(copyRecipe);
     }

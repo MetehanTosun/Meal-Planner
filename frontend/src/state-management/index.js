@@ -19,6 +19,18 @@ function isDayPast(dayDate) {
   return dateToCheck < today;
 }
 
+function checkValidAction(day){
+  if( !day || day.isPast ){
+    toast.warning("Der Tag ist bereits abgelaufen!", {
+      position: "top-right",
+      timeout: 3500,
+    });
+    return false
+  }else{
+    return true
+  }
+}
+
 export const useWeekStore = defineStore('week', {
   state: () => ({
     weeks: [], // All fetched weeks
@@ -89,9 +101,12 @@ export const useWeekStore = defineStore('week', {
      */
     async addRecipeToDay(dayId, recipeId, portions) {
       try {
+
+        // Retrieve the matching day from the currentWeek
         const currentWeek = this.weeks[this.currentWeekIndex];
         const day = currentWeek.days.find(d => d.id === dayId);
 
+        // Check if it is even allowed to add a recipe to the day or if the day exists in the first place
         if (!day) {
           console.warn(`Day with ID ${dayId} not found in the current week.`);
           return;
@@ -106,6 +121,7 @@ export const useWeekStore = defineStore('week', {
           return;
         }
 
+        // Send post to backend to add userSpecificRecipe to day in backend
         await axios.post('/days/add-recipe', {
           dayId: dayId,
           recipeId: recipeId,
@@ -114,6 +130,7 @@ export const useWeekStore = defineStore('week', {
 
         const existingRecipe = day.userSpecificRecipes.find(r => r.recipeData.id === recipeId);
 
+        // Own Method for fetching recipe data and returning an alternative if an error occours until fetched again
         const fetchRecipeData = async () => {
           try {
             const response = await axios.get(`/recipes/${recipeId}`);
@@ -131,6 +148,7 @@ export const useWeekStore = defineStore('week', {
 
         const recipeData = await fetchRecipeData();
 
+        // In case it existed just change the data in the frontend directly (increase portions)
         if (existingRecipe) {
           existingRecipe.portions += portions;
         } else {
@@ -139,6 +157,7 @@ export const useWeekStore = defineStore('week', {
             recipeData: recipeData,
             portions,
           };
+          // add the new recipe to the day object by adding the new object
           day.userSpecificRecipes = [...day.userSpecificRecipes, newRecipe];
         }
 
@@ -163,13 +182,18 @@ export const useWeekStore = defineStore('week', {
      * @param {number} dayId - The ID of the day.
      * @param {number} recipeId - The ID of the recipe to remove.
      */
-    async removeRecipeFromDay(dayId, recipeId) {
-      try {
-        await axios.delete(`/days/${dayId}/recipes/${recipeId}`);
-        await this.fetchWeeksInRange(this.weeks.length);
-      } catch (error) {
-        console.error(`Error removing recipe with ID ${recipeId} from day with ID ${dayId}:`, error);
-        throw error;
+    async removeRecipeFromDay(day, recipeId) {
+      if(!checkValidAction(day)){
+        return;
+      }else{
+        try {
+          const dayId = day.id;
+          await axios.delete(`/days/${dayId}/recipes/${recipeId}`);
+          await this.fetchWeeksInRange(this.weeks.length);
+        } catch (error) {
+          console.error(`Error removing recipe with ID ${recipeId} from day with ID :`, error);
+          throw error;
+        }
       }
     },
 
@@ -177,13 +201,17 @@ export const useWeekStore = defineStore('week', {
      * Increment the portions for a recipe.
      * @param {number} recipeId - The ID of the recipe.
      */
-    async incrementRecipePortions(recipeId) {
-      try {
-        await axios.post(`/user-specific-recipes/${recipeId}/increment-portions`);
-        await this.fetchWeeksInRange(this.weeks.length);
-      } catch (error) {
-        console.error(`Error incrementing portions for recipe ID ${recipeId}:`, error);
-        throw error;
+    async incrementRecipePortions(recipeId,day) {
+      if(!checkValidAction(day)){
+        return;
+      }else{
+        try {
+          await axios.post(`/user-specific-recipes/${recipeId}/increment-portions`);
+          await this.fetchWeeksInRange(this.weeks.length);
+        } catch (error) {
+          console.error(`Error incrementing portions for recipe ID ${recipeId}:`, error);
+          throw error;
+        }
       }
     },
 
@@ -191,12 +219,16 @@ export const useWeekStore = defineStore('week', {
      * Decrement the portions for a recipe.
      * @param {number} recipeId - The ID of the recipe.
      */
-    async decrementRecipePortions(recipeId) {
-      try {
-        await axios.post(`/user-specific-recipes/${recipeId}/decrement-portions`);
-        await this.fetchWeeksInRange(this.weeks.length);
-      } catch (error) {
-        throw error;
+    async decrementRecipePortions(recipeId,day) {
+      if(!checkValidAction(day)){
+        return;
+      }else{
+        try {
+          await axios.post(`/user-specific-recipes/${recipeId}/decrement-portions`);
+          await this.fetchWeeksInRange(this.weeks.length);
+        } catch (error) {
+          throw error;
+        }
       }
     },
     async handleWeekTransition() {

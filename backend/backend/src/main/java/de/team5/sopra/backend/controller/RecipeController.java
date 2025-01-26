@@ -105,8 +105,7 @@ public class RecipeController {
 
 	/**
 	 * DELETE /recipes/{recipeId}/ingredients/{ingredientName}
-	 * Löscht eine einzelne Ingredient anhand des Namens
-	 * (in der Praxis besser: /{ingredientId} ID-basiert).
+	 *
 	 */
 	@DeleteMapping("/{recipeId}/ingredients/{ingredientName}")
 	public ResponseEntity<Void> deleteIngredient(@PathVariable Long recipeId,
@@ -117,6 +116,8 @@ public class RecipeController {
 
 	/**
 	 * GET /recipes/{id}/instructions : Instructions eines Rezepts abrufen
+	 *
+	 * Never used
 	 */
 	@GetMapping("/{id}/instructions")
 	public List<String> getInstructions(@PathVariable Long id) {
@@ -124,7 +125,10 @@ public class RecipeController {
 	}
 
 	/**
-	 * @return
+	 * Enables sharing a recipe with another user of the system
+	 * PARAM:   receiver:USER,    recipeID:Long
+	 *
+	 * Used in frontend
 	 */
 	@PutMapping("/share")
 	public ResponseEntity<?> shareRecipe(@RequestBody ShareRecipeDTO shareRecipeDTO) {
@@ -136,29 +140,16 @@ public class RecipeController {
 		}
 	}
 
-
-	private User getCurrentUser() {
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		if (authentication == null || !authentication.isAuthenticated() ||
-				"anonymousUser".equals(authentication.getPrincipal())) {
-			throw new IllegalStateException("No authenticated user found");
-		}
-
-
-		if (authentication.getPrincipal() instanceof String) {
-			String username = (String) authentication.getPrincipal();
-			return userService.getUserByUsername(username); // Use userService here
-		}
-
-		// Check if the Principal is a UserDetails implementation
-		if (authentication.getPrincipal() instanceof org.springframework.security.core.userdetails.User) {
-			String username = ((org.springframework.security.core.userdetails.User) authentication.getPrincipal()).getUsername();
-			return userService.getUserByUsername(username); // Use userService here
-		}
-
-		throw new IllegalStateException("Unexpected Principal type: " + authentication.getPrincipal().getClass().getName());
-	}
-
+	/**
+	 * Toggle Favorite works like a toggle by always inverting the favorite
+	 * value currently saved in the recipe
+	 *
+	 * Used in frontend
+	 *
+	 * @param userId
+	 * @param id
+	 * @return
+	 */
 	@PutMapping("/{id}/toggle-favorite")
 	public ResponseEntity<RecipeDTO> toggleFavorite(@RequestHeader("User-Id") Long userId, @PathVariable Long id) {
 		try {
@@ -176,17 +167,6 @@ public class RecipeController {
 		} catch (Exception e) {
 			log.error("Error toggling favorite", e);
 			throw e;
-		}
-	}
-
-	@GetMapping("/{id}/is-favorite")
-	public ResponseEntity<Boolean> isFavorite(@PathVariable Long id) {
-		try {
-			Long userId = getCurrentUser().getId();
-			Recipe recipe = recipeService.getRecipeById(id);
-			return ResponseEntity.ok(recipe.isFavoriteByUser(userId));
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 		}
 	}
 }

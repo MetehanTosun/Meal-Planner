@@ -5,6 +5,7 @@
   const VEGAN = 'VEGAN';
   const MEAT = 'MEAT';
 
+  // Enforces tjese rules (type checking), when something is required the parent has to provide it
   defineProps({
     recipe: {
       type: Object,
@@ -18,6 +19,7 @@
 
   const emit = defineEmits(['close']);
 
+  // Inform frontend with close event
   const closePopup = () => {
     emit('close');
   };
