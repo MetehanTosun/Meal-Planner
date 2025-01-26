@@ -2,7 +2,7 @@
 
 A simple Meal Planner Web Application, where you can plan your meals for the week and automatically generate Shopping lists.
 
-You can visit the application via [http://193.196.53.132:5173/](http://193.196.53.132:5173/)
+You can visit the application via [http://193.196.53.132:80/](http://193.196.53.132:80/)
 
 ## Requirements
 
