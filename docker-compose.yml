@@ -1,0 +1,38 @@
+services:
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_PW}
+      MARIADB_DATABASE: MealPlanner
+      MARIADB_USER: mealplanner
+      MARIADB_PASSWORD: ${MARIADB_PW}
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend/backend
+    ports:
+      - "8080:8080"
+    environment:
+      MARIADB_PW: ${MARIADB_PW}
+      SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/MealPlanner?useSSL=false&serverTimezone=UTC
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  db_data:

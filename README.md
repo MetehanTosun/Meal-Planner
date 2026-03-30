@@ -6,58 +6,56 @@ You can visit the application via [http://193.196.53.132/](http://193.196.53.132
 
 ## Requirements
 
-## Setup and Run
+- Docker & Docker Compose
 
-To run the project yourself:
+## Setup and Run
 
 ### 1. Clone the repository
 ```bash
 git clone <repository-url>
 cd <repository-folder>
 ```
-## Frontend
- The frontend for the web application is in the /frontend directory
 
-### 1. Install Frontend Dependencies
-```bash
-npm install
+### 2. Create a `.env` file in the project root
 ```
-### 2. Start/Run Frontend Application
-```bash
-npm run dev
-```
-## Backend
-
-The backend is in the /backend/backend directory
-
-### 2. Build the project
-```bash
-mvn clean install -DskipTest
+MARIADB_PW=yourpassword
 ```
 
-### 3. Run the application
-
-Run the project with Maven:
+### 3. Start all services
 ```bash
-mvn spring-boot:run
+docker compose up --build
 ```
 
-Alternatively, run the generated JAR file:
-```bash
-java -jar target/<project-name>.jar
-```
+- Frontend: http://localhost:5173
+- Backend: http://localhost:8080
 
 ---
 
-### Dependencies
+## Run without Docker
 
+### Requirements
+- Java 21
+- Maven
+- Node.js
 
+### Database
+Start only the database via Docker:
+```bash
+docker compose up db -d
+```
 
-### Installing
+### Backend
+```bash
+cd backend/backend
+mvn spring-boot:run
+```
 
-
-
-### Executing program
+### Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
 
 ## Help

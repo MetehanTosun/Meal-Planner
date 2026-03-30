@@ -12,3 +12,6 @@ backend/backend/src/test.http
 
 # Ignore build artifacts
 /target/
+
+# Ignore environment variables
+.env
